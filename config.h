@@ -50,14 +50,8 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
-/* Define to 1 if you have the `crypto' library (-lcrypto). */
-/* #undef HAVE_LIBCRYPTO */
-
 /* Define to 1 if you have the `dl' library (-ldl). */
 #define HAVE_LIBDL 1
-
-/* Define to 1 if you have the `expat' library (-lexpat). */
-/* #undef HAVE_LIBEXPAT */
 
 /* Define to 1 if you have the `m' library (-lm). */
 #define HAVE_LIBM 1
@@ -67,9 +61,6 @@
 
 /* Define to 1 if you have the `rt' library (-lrt). */
 #define HAVE_LIBRT 1
-
-/* Define to 1 if you have the `ssl' library (-lssl). */
-/* #undef HAVE_LIBSSL */
 
 /* Define to 1 if you have the <limits.h> header file. */
 #define HAVE_LIMITS_H 1

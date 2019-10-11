@@ -2,7 +2,7 @@ Source: vscpl2drv-socketcan
 Section: utils
 Priority: optional
 Maintainer: Ake Hedman <akhe@grodansparadis.com>
-Build-Depends: debhelper (>= 11), autotools-dev
+Build-Depends: debhelper (>= 11)
 Standards-Version: 4.1.3
 Homepage: https://www.vscp.org
 Vcs-Browser: https://github.com/grodansparadis/vscpl2drv-socketcan
@@ -10,8 +10,8 @@ Vcs-Git: https://github.com/grodansparadis/vscpl2drv-socketcan.git
 
 Package: vscpl2drv-socketcan
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libc6-dev (>= 2.15),
- libstdc++6 (>= 4.9), libgcc1 (>= 1:4.1.1)
+Depends: ${shlibs:Depends}, ${misc:Depends}, libc6-dev (>= 2.14),
+ libstdc++6 (>= 5.2), libgcc1 (>= 1:3.0)
 Description: Level I logger driver for the VSCP daemon
  A driver that can be added to the VSCP server to get logging of level I
  events on a specific file. Filters can be set.

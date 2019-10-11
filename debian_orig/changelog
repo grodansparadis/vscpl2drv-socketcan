@@ -1,4 +1,4 @@
-vscpl2drv-socketcan (1.1.0-1) UNRELEASED; urgency=medium
+vscpl2drv-socketcan (1.1.0-1ubuntu0) UNRELEASED; urgency=medium
 
   * Initial release (Closes: #1234)
 

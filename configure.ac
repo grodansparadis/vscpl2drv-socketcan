@@ -82,7 +82,7 @@ AS_IF([test "$ac_cv_sizeof_long" -eq 8],
     [AC_DEFINE([OSBIT], 64, [Define to the size of a long in bits.])],
     [AC_DEFINE([OSBIT], 32, [Define to the size of a long in bits.])])
 
-AC_SUBST(VSCPDIR)
+AC_SUBST(DESTDIR)
 AC_SUBST(EXTRALIBS)
 AC_SUBST(STATIC)
 AC_SUBST(MAJOR_VERSION)
@@ -126,12 +126,12 @@ dnl
 dnl Project base installation folder
 dnl
 
-AC_ARG_VAR(VSCPDIR, Set base folder for installation (/srv/vscp) )
-if test "${VSCPDIR+set}" = set; then
-  echo "variable \$VSCPDIR is set to: $VSCPDIR"
+AC_ARG_VAR(DESTDIR, Set base folder for installation (/srv/vscp) )
+if test "${DESTDIR+set}" = set; then
+  echo "variable \$DESTDIR is set to: $DESTDIR"
 else
-  VSCPDIR="/srv/vscp"
-  echo "variable \$VSCPDIR is set to: $VSCPDIR"
+  DESTDIR="/srv/vscp/"
+  echo "variable \$DESTDIR is set to: $DESTDIR"
 fi
 
 dnl
@@ -162,7 +162,7 @@ echo   "           VSCP configuration"
 echo   "--------------------------------------------"
 echo   "Version          : ${PACKAGE_VERSION} (major_version.minor_version.release_version.build_version)"
 echo   "System           : `uname -a` "
-echo   "VSCP install dir : ${VSCPDIR}"
+echo   "VSCP install dir : ${DESTDIR}"
 
 dnl Output some debugging information
 echo   "LIBS             : ${LIBS}"

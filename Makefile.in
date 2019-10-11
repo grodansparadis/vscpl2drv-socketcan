@@ -16,7 +16,7 @@ INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_DIR = /usr/bin/install -c -d
 PROJ_SUBDIRS=@PROJ_SUBDIRS@
-VSCP_PROJ_BASE_DIR=@VSCPDIR@
+VSCP_PROJ_BASE_DIR=@DESTDIR@
 IPADDRESS :=  $(shell hostname -I)
 
 
@@ -53,7 +53,7 @@ clean:
 distclean: clean
 	@sh clean_for_dist
 	rm -f m4/Makefile
-	
+
 deb:
 	@for d in $(PROJ_SUBDIRS); do (echo "====================================================" &&\
 	echo "Building deb in dir " $$d && echo "====================================================" && cd $$d && $(MAKE) deb ); done

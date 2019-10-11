@@ -33,9 +33,10 @@ mkdir debian
 tar -zxvf ../$NAME_PLUS_VER.tar.gz
 dh_make --single --defaultless -f ../$NAME_PLUS_VER.tar.gz -a -s -c mit -y
 cp -r ../debian_orig/* debian/
+#ls
 echo "---Now do 'dpkg-buildpackage -us -uc' or 'dpkg-buildpackage -b'"
 
-cd $NAME_PLUS_VER
+#cd $NAME_PLUS_VER
 #debuild clean
 debuild -us -uc
 

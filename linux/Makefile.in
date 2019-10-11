@@ -11,11 +11,10 @@ PACKAGE_VERSION=@PACKAGE_VERSION@
 
 # STATIC = yes if a static build is requested.
 STATIC=@STATIC@
-VSCP_PROJ_BASE_DIR=@VSCPDIR@
+VSCP_PROJ_BASE_DIR=@DESTDIR@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
-INSTALL = @INSTALL@
 top_srcdir = @top_srcdir@
 top_builddir = @top_builddir@
 
@@ -34,7 +33,8 @@ DLFLAGS = -g -shared -fPIC
 STRIP = strip
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
-INSTALL_DIR = /usr/bin/install -c -d
+INSTALL_DIR = @INSTALL@ -d
+INSTALL = @INSTALL@
 srcdir = .
 top_srcdir = .
 top_builddir =
@@ -44,9 +44,10 @@ datadir = ${prefix}/share
 includedir = ${prefix}/include
 DLLPREFIX = lib
 
+#LIB_SONAME = "vscpl2drv-socketcan.so.$(MAJOR_VERSION)"
+LIB_SONAME = "vscpl2drv-socketcan"
 
 ### Variables: ###
-
 
 SOCKETCAN_OBJECTS = vscpl2drv-socketcan.o\
 	socketcan.o\
@@ -74,7 +75,7 @@ test:  test.o $(PROJOBJS)
 	$(CXX) -o $@ test.o $(PROJOBJS) $(LDFLAGS) $(LIBS) $(EXTRALIBS)
 
 vscpl2drv-socketcan.so: $(SOCKETCAN_OBJECTS)
-	$(CXX) -o $@ $(SOCKETCAN_OBJECTS) $(DLFLAGS) $(LIBS) $(EXTRALIBS)
+	$(CXX) -Wl,-soname,$(LIB_SONAME) -o $@ $(SOCKETCAN_OBJECTS) $(DLFLAGS) $(LIBS) $(EXTRALIBS)
 
 socketcan.o: socketcan.cpp socketcan.h
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c socketcan.cpp -o $@
@@ -119,12 +120,12 @@ dllist.o: ../_vscp_common_general/dllist.c ../_vscp_common_general/dllist.h
 	$(CC) $(CFLAGS) -c ../_vscp_common_general/dllist.c -o $@
 
 install: all
-	$(INSTALL_PROGRAM) vscpl2drv-socketcan.so $(libdir)/
-	$(INSTALL_PROGRAM) libvscpl2drv-socketcan.a $(libdir)/
+	$(STRIP) vscpl2drv-socketcan.so
+	$(INSTALL_DIR) $(VSCP_PROJ_BASE_DIR)/drivers/level2/
+	$(INSTALL_PROGRAM) vscpl2drv-socketcan.so $(VSCP_PROJ_BASE_DIR)/drivers/level2/
 
 uninstall:
-	rm -rf $(libdir)/vscpl2drv-socketcan.so
-	rm -rf $(libdir)/libvscpl2drv-socketcan.a
+	rm -rf $(VSCP_PROJ_BASE_DIR)/drivers/level2/vscpl2drv-socketcan.so
 
 install-strip: install
 
