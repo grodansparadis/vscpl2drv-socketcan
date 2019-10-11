@@ -1,9 +1,11 @@
 #!/bin/sh
 
-MAJOR_VERSION=`sed '35!d' ../vscp/src/vscp/common/version.h  | cut -b 33-`
-MINOR_VERSION=`sed '36!d' ../vscp/src/vscp/common/version.h  | cut -b 33-`
-RELEASE_VERSION=`sed '37!d' ../vscp/src/vscp/common/version.h  | cut -b 33-`
-BUILD_VERSION=`sed '38!d' ../vscp/src/vscp/common/version.h  | cut -b 33-`
+# Package version
+MAJOR_VERSION=`cat VERSION.m4 | grep "\[major_version" | cut -d' ' -f2- | tr -d '[]) '`
+MINOR_VERSION=`cat VERSION.m4 | grep "\[minor_version" | cut -d' ' -f2- | tr -d '[]) '`
+RELEASE_VERSION=`cat VERSION.m4 | grep "\[release_version" | cut -d' ' -f2- | tr -d '[]) '`
+BUILD_VERSION=`cat VERSION.m4 | grep "\[build_version" | cut -d' ' -f2- | tr -d '[]) '`
+
 NAME_PLUS_VER=vscpl2drv-socketcan-$MAJOR_VERSION.$MINOR_VERSION.$RELEASE_VERSION
 BUILD_FOLDER=/tmp/__build__/`date +vscp_build_%y%m%d_%H%M%S`
 

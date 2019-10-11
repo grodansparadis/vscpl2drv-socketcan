@@ -2,6 +2,13 @@
 # Makefile : Builds vscpl2drv-socketcan for Unix.
 #
 
+# Package version
+MAJOR_VERSION=1
+MINOR_VERSION=1
+RELEASE_VERSION=0
+BUILD_VERSION=0
+PACKAGE_VERSION=1.1.0
+
 STATIC=no
 
 INSTALL = /usr/bin/install -c
@@ -11,6 +18,8 @@ INSTALL_DIR = /usr/bin/install -c -d
 PROJ_SUBDIRS=linux 
 VSCP_PROJ_BASE_DIR=/srv/vscp
 IPADDRESS :=  $(shell hostname -I)
+
+
 
 all:
 	@for d in $(PROJ_SUBDIRS); do (echo "====================================================" &&\

@@ -1,11 +1,11 @@
 dnl Autoconf settings for vscpl2drv-socketcan
 dnl $Id: configure.in,v 1.5 2017/10/13 11:22:06 akhe Exp $
 
-AC_INIT( [vscpl2drv-socketcan], [14.0.0], [akhe@grodansparadis.com])
-AC_CONFIG_SRCDIR([common/log.cpp])
+dnl Get version
+m4_builtin([include], VERSION.m4)
 
-CONFIGURE_LINE="$0 $*"
-CODENAME="Ant"
+AC_INIT( [vscpl2drv-socketcan], [package_version], [akhe@grodansparadis.com])
+AC_CONFIG_SRCDIR([common/log.cpp])
 
 AC_CONFIG_MACRO_DIR(m4)
 
@@ -86,8 +86,15 @@ AS_IF([test "$ac_cv_sizeof_long" -eq 8],
 AC_SUBST(VSCPDIR)
 AC_SUBST(EXTRALIBS)
 AC_SUBST(STATIC)
+AC_SUBST(MAJOR_VERSION)
+AC_SUBST(MINOR_VERSION)
+AC_SUBST(RELEASE_VERSION)
+AC_SUBST(BUILD_VERSION)
 
-EXTRALIBS="${EXTRALIBS} ${LIBS}"
+MAJOR_VERSION=major_version
+MINOR_VERSION=minor_version
+RELEASE_VERSION=release_version
+BUILD_VERSION=build_version
 
 if test "${vscp_static}" = yes ; then
 STATIC="yes"
@@ -145,7 +152,7 @@ AC_CONFIG_FILES([Makefile
          linux/Makefile
 ])
 
-EXTRALIBS="${EXTRALIBS} ${LIBS}"
+EXTRALIBS="${EXTRALIBS}"
 
 dnl Generate makefiles
 AC_OUTPUT
@@ -154,7 +161,7 @@ dnl Give user some feedback
 echo
 echo   "           VSCP configuration"
 echo   "--------------------------------------------"
-echo   "VSCP version     : `sh echo-version` (${PACKAGE_VERSION})"
+echo   "Version          : ${PACKAGE_VERSION} (major_version.minor_version.release_version.build_version)"
 echo   "System           : `uname -a` "
 echo   "VSCP install dir : ${VSCPDIR}"
 
