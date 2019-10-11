@@ -48,7 +48,7 @@ DLLPREFIX = lib
 ### Variables: ###
 
 
-SOCKETCAN_OBJECTS = vscpl2drv_socketcan.o\
+SOCKETCAN_OBJECTS = vscpl2drv-socketcan.o\
 	socketcan.o\
 	vscpremotetcpif.o\
 	vscphelper.o\
@@ -64,8 +64,11 @@ SOCKETCAN_OBJECTS = vscpl2drv_socketcan.o\
 
 ### Targets: ###
 
-all: vscpl2drv-socketcan.so test
+all: vscpl2drv-socketcan.so test lib man
 
+# static lib
+lib:	vscpl2drv-socketcan.so
+	ar rcs libvscpl2drv-socketcan.a vscpl2drv-socketcan.o
 
 test:  test.o $(PROJOBJS)
 	$(CXX) -o $@ test.o $(PROJOBJS) $(LDFLAGS) $(LIBS) $(EXTRALIBS)
@@ -116,12 +119,17 @@ dllist.o: ../_vscp_common_general/dllist.c ../_vscp_common_general/dllist.h
 	$(CC) $(CFLAGS) -c ../_vscp_common_general/dllist.c -o $@
 
 install: all
-	mkdir -p $(VSCP_PROJ_BASE_DIR)/drivers/level2
-	$(INSTALL_PROGRAM) vscpl2drv-socketcan.so $(VSCP_PROJ_BASE_DIR)/drivers/level2
+	$(INSTALL_PROGRAM) vscpl2drv-socketcan.so $(libdir)/
+	$(INSTALL_PROGRAM) libvscpl2drv-socketcan.a $(libdir)/
 
 uninstall:
+	rm -rf $(libdir)/vscpl2drv-socketcan.so
+	rm -rf $(libdir)/libvscpl2drv-socketcan.a
 
 install-strip: install
+
+man: ../man/vscpl2drv-socketcan.1.md
+	pandoc -s -t man ../man/vscpl2drv-socketcan.1.md -o ../man/vscpl2drv-socketcan.1
 
 deb:    all
 	echo "\n" | ./builddist.sh

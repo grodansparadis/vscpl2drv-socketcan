@@ -33,7 +33,7 @@
 #include "stdlib.h"
 
 #include "socketcan.h"
-#include "vscpl2drv_socketcan.h"
+#include "vscpl2drv-socketcan.h"
 
 void
 _init() __attribute__((constructor));

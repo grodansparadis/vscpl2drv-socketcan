@@ -1,5 +1,5 @@
 % vscpl2drv-socketcan(1) VSCP Level II Logger Driver
-% Åke Hedman, Grodans Paradis AB
+% Åke Hedmann, Grodans Paradis AB
 % September 28, 2019
 
 # NAME

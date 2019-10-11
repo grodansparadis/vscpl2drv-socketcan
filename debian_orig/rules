@@ -38,4 +38,5 @@ configure:
 override_dh_auto_install:
 	strip linux/vscpl2drv-socketcan.so
 	install -D -m 0755 linux/vscpl2drv-socketcan.so $$(pwd)/debian/vscpl2drv-socketcan/usr/lib/vscpl2drv-socketcan.so
+	install -D -m 0755 linux/libvscpl2drv-socketcan.a $$(pwd)/debian/vscpl2drv-socketcan/usr/lib/libvscpl2drv-socketcan.a
 #	dh_auto_install --prefix=/usr

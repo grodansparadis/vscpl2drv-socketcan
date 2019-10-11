@@ -63,7 +63,7 @@
 #include <vscphelper.h>
 #include <vscpremotetcpif.h>
 
-#include "vscpl2drv_socketcan.h"
+#include "vscpl2drv-socketcan.h"
 #include "socketcan.h"
 
 // Buffer for XML parser

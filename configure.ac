@@ -31,12 +31,11 @@ AC_PROG_RANLIB
 # Check for needed libraries.
 AC_CHECK_LIB([dl], [dlsym])
 AC_CHECK_LIB([pthread], [pthread_create])
-AC_CHECK_LIB([crypto], [MD5_Init])
+dnl AC_CHECK_LIB([crypto], [MD5_Init])
 AC_CHECK_LIB([m],[sin])
 AC_CHECK_LIB([rt],[clock_gettime])
-AC_CHECK_LIB([ssl], [SSL_free])
-AC_CHECK_LIB([expat], [XML_ParserCreate])
-
+dnl AC_CHECK_LIB([ssl], [SSL_free])
+dnl AC_CHECK_LIB([expat], [XML_ParserCreate])
 
 # Checks for header files.
 AC_HEADER_DIRENT
