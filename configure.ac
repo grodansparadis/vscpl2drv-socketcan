@@ -164,6 +164,14 @@ echo   "Version          : ${PACKAGE_VERSION} (major_version.minor_version.relea
 echo   "System           : `uname -a` "
 echo   "VSCP install dir : ${DESTDIR}"
 
+dnl echo   "${ax_enable_debug}"
+if test "${ax_enable_debug}" = "yes"
+then
+   echo "build flavour    : debug "
+else
+   echo "build flavour    : release "
+fi
+
 dnl Output some debugging information
 echo   "LIBS             : ${LIBS}"
 echo   "EXTRALIBS        : ${EXTRALIBS}"
@@ -172,12 +180,6 @@ echo   "EXTRACXXFLAGS    : ${CXXFLAGS}"
 echo   "EXTRACFLAGS      : ${CFLAGS}"
 echo   "PROJ_SUBDIRS     : ${PROJ_SUBDIRS}"
 
-dnl echo   "${ax_enable_debug}"
-if test "${ax_enable_debug}" = "yes"
-then
-   echo "build flavour   : debug "
-else
-   echo "build flavour   : release "
-fi
+
 
 dnl vi: set et sts=4 sw=4 com=\:dnl

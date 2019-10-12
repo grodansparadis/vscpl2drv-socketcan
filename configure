@@ -7686,6 +7686,13 @@ echo   "Version          : ${PACKAGE_VERSION} (1.1.0.0)"
 echo   "System           : `uname -a` "
 echo   "VSCP install dir : ${DESTDIR}"
 
+if test "${ax_enable_debug}" = "yes"
+then
+   echo "build flavour    : debug "
+else
+   echo "build flavour    : release "
+fi
+
 echo   "LIBS             : ${LIBS}"
 echo   "EXTRALIBS        : ${EXTRALIBS}"
 echo   "EXTRACPPFLAGS    : ${CPPFLAGS}"
@@ -7693,10 +7700,5 @@ echo   "EXTRACXXFLAGS    : ${CXXFLAGS}"
 echo   "EXTRACFLAGS      : ${CFLAGS}"
 echo   "PROJ_SUBDIRS     : ${PROJ_SUBDIRS}"
 
-if test "${ax_enable_debug}" = "yes"
-then
-   echo "build flavour   : debug "
-else
-   echo "build flavour   : release "
-fi
+
 

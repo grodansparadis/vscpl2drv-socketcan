@@ -44,7 +44,6 @@ datadir = ${prefix}/share
 includedir = ${prefix}/include
 DLLPREFIX = lib
 
-#LIB_SONAME = "vscpl2drv-socketcan.so.$(MAJOR_VERSION)"
 LIB_SONAME = "vscpl2drv-socketcan"
 
 ### Variables: ###
