@@ -5,7 +5,6 @@ dnl Get version
 m4_builtin([include], VERSION.m4)
 
 AC_INIT( [vscpl2drv-socketcan], [package_version], [akhe@grodansparadis.com])
-AC_CONFIG_SRCDIR([common/log.cpp])
 
 AC_CONFIG_MACRO_DIR(m4)
 
@@ -31,10 +30,10 @@ AC_PROG_RANLIB
 # Check for needed libraries.
 AC_CHECK_LIB([dl], [dlsym])
 AC_CHECK_LIB([pthread], [pthread_create])
-dnl AC_CHECK_LIB([crypto], [MD5_Init])
+AC_CHECK_LIB([crypto], [MD5_Init])
 AC_CHECK_LIB([m],[sin])
 AC_CHECK_LIB([rt],[clock_gettime])
-dnl AC_CHECK_LIB([ssl], [SSL_free])
+AC_CHECK_LIB([ssl], [SSL_free])
 dnl AC_CHECK_LIB([expat], [XML_ParserCreate])
 
 # Checks for header files.
