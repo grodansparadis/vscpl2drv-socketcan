@@ -69,10 +69,10 @@ all: vscpl2drv-socketcan.so test lib man
 
 # static lib
 lib:	vscpl2drv-socketcan.so
-	ar rcs libvscpl2drv-socketcan.a vscpl2drv-socketcan.o
+	ar rcs libvscpl2drv-socketcan.a $(SOCKETCAN_OBJECTS)
 
-test:  test.o $(PROJOBJS)
-	$(CXX) -o $@ test.o $(PROJOBJS) $(LDFLAGS) @LIBS@ $(EXTRALIBS)
+test:  test.o $(SOCKETCAN_OBJECTS)
+	$(CXX) -o $@ test.o $(SOCKETCAN_OBJECTS) $(LDFLAGS) @LIBS@ $(EXTRALIBS)
 
 vscpl2drv-socketcan.so: $(SOCKETCAN_OBJECTS)
 	$(CXX) -Wl,-soname,$(LIB_SONAME) -o $@ $(SOCKETCAN_OBJECTS) $(DLFLAGS) @LIBS@ $(EXTRALIBS)
