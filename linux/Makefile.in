@@ -27,6 +27,7 @@ CXXFLAGS = -std=c++11 -D__LINUX__ -fPIC -D_REENTRANT @CXXFLAGS@
 CPPFLAGS = -D__LINUX__ -fPIC @CPPFLAGS@  -fno-var-tracking-assignments -I@top_srcdir@ -Iinclude -I../_vscp_common -I../_vscp_common_general
 
 LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
 EXTRALIBS = @EXTRALIBS@
 
 DLFLAGS = -g -shared -fPIC
@@ -71,10 +72,10 @@ lib:	vscpl2drv-socketcan.so
 	ar rcs libvscpl2drv-socketcan.a vscpl2drv-socketcan.o
 
 test:  test.o $(PROJOBJS)
-	$(CXX) -o $@ test.o $(PROJOBJS) $(LDFLAGS) $(LIBS) $(EXTRALIBS)
+	$(CXX) -o $@ test.o $(PROJOBJS) $(LDFLAGS) @LIBS@ $(EXTRALIBS)
 
 vscpl2drv-socketcan.so: $(SOCKETCAN_OBJECTS)
-	$(CXX) -Wl,-soname,$(LIB_SONAME) -o $@ $(SOCKETCAN_OBJECTS) $(DLFLAGS) $(LIBS) $(EXTRALIBS)
+	$(CXX) -Wl,-soname,$(LIB_SONAME) -o $@ $(SOCKETCAN_OBJECTS) $(DLFLAGS) @LIBS@ $(EXTRALIBS)
 
 socketcan.o: socketcan.cpp socketcan.h
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c socketcan.cpp -o $@
