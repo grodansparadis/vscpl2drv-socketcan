@@ -65,10 +65,10 @@ SOCKETCAN_OBJECTS = vscpl2drv-socketcan.o\
 
 ### Targets: ###
 
-all: vscpl2drv-socketcan.so test lib man
+all: vscpl2drv-socketcan.so test libvscpl2drv-socketcan.a man
 
 # static lib
-lib:	vscpl2drv-socketcan.so
+libvscpl2drv-socketcan.a:	vscpl2drv-socketcan.so
 	ar rcs libvscpl2drv-socketcan.a $(SOCKETCAN_OBJECTS)
 
 test:  test.o $(SOCKETCAN_OBJECTS)
