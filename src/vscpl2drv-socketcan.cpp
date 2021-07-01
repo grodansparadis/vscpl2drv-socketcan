@@ -7,7 +7,7 @@
 //
 // This file is part of the VSCP (http://www.vscp.org)
 //
-// Copyright (C) 2000-2019 Ake Hedman,
+// Copyright (C) 2000-2021 Ake Hedman,
 // Ake Hedman, Grodans Paradis AB, <akhe@grodansparadis.com>
 //
 // This file is distributed in the hope that it will be useful,
@@ -33,7 +33,25 @@
 #include "stdlib.h"
 
 #include "socketcan.h"
+#include "version.h"
 #include "vscpl2drv-socketcan.h"
+
+#include <json.hpp> // Needs C++11  -std=c++11
+#include <mustache.hpp>
+
+#include <spdlog/async.h>
+#include <spdlog/sinks/rotating_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
+
+// https://github.com/nlohmann/json
+using json = nlohmann::json;
+using namespace kainjow::mustache;
+
+void
+_init() __attribute__((constructor));
+void
+_fini() __attribute__((destructor));
 
 void
 _init() __attribute__((constructor));
@@ -41,7 +59,7 @@ void
 _fini() __attribute__((destructor));
 
 // This map holds driver handles/objects
-static std::map<long, Csocketcan *> g_ifMap;
+static std::map<long, CSocketcan *> g_ifMap;
 
 // Mutex for the map object
 static pthread_mutex_t g_mapMutex;
@@ -53,7 +71,7 @@ static pthread_mutex_t g_mapMutex;
 void
 _init()
 {
-    pthread_mutex_init(&g_mapMutex, NULL);
+  pthread_mutex_init(&g_mapMutex, NULL);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -63,30 +81,28 @@ _init()
 void
 _fini()
 {
-    // If empty - nothing to do
-    if (g_ifMap.empty()) return;
+  // If empty - nothing to do
+  if (g_ifMap.empty())
+    return;
 
-    // Remove orphan objects
+  // Remove orphan objects
 
-    LOCK_MUTEX(g_mapMutex);
+  LOCK_MUTEX(g_mapMutex);
 
-    for (std::map<long, Csocketcan *>::iterator it = g_ifMap.begin();
-         it != g_ifMap.end();
-         ++it) {
-        // std::cout << it->first << " => " << it->second << '\n';
+  for (std::map<long, CSocketcan *>::iterator it = g_ifMap.begin(); it != g_ifMap.end(); ++it) {
+    // std::cout << it->first << " => " << it->second << '\n';
 
-        Csocketcan *pif = it->second;
-        if (NULL != pif) {
-            pif->m_srv.doCmdClose();
-            delete pif;
-            pif = NULL;
-        }
+    CSocketcan *pif = it->second;
+    if (NULL != pif) {
+      delete pif;
+      pif = NULL;
     }
+  }
 
-    g_ifMap.clear(); // Remove all items
+  g_ifMap.clear(); // Remove all items
 
-    UNLOCK_MUTEX(g_mapMutex);
-    pthread_mutex_destroy(&g_mapMutex);
+  UNLOCK_MUTEX(g_mapMutex);
+  pthread_mutex_destroy(&g_mapMutex);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -94,46 +110,48 @@ _fini()
 //
 
 long
-addDriverObject(Csocketcan *pif)
+addDriverObject(CSocketcan *pif)
 {
-    std::map<long, Csocketcan *>::iterator it;
-    long h = 0;
+  std::map<long, CSocketcan *>::iterator it;
+  long h = 0;
 
-    LOCK_MUTEX(g_mapMutex);
+  LOCK_MUTEX(g_mapMutex);
 
-    // Find free handle
-    while (true) {
-        if (g_ifMap.end() == (it = g_ifMap.find(h))) break;
-        h++;
-    };
+  // Find free handle
+  while (true) {
+    if (g_ifMap.end() == (it = g_ifMap.find(h)))
+      break;
+    h++;
+  };
 
-    g_ifMap[h] = pif;
-    h += 1681;
+  g_ifMap[h] = pif;
+  h += 1681;
 
-    UNLOCK_MUTEX(g_mapMutex);
+  UNLOCK_MUTEX(g_mapMutex);
 
-    return h;
+  return h;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // getDriverObject
 //
 
-Csocketcan *
+CSocketcan *
 getDriverObject(long h)
 {
-    std::map<long, Csocketcan *>::iterator it;
-    long idx = h - 1681;
+  std::map<long, CSocketcan *>::iterator it;
+  long idx = h - 1681;
 
-    // Check if valid handle
-    if (idx < 0) return NULL;
-
-    it = g_ifMap.find(idx);
-    if (it != g_ifMap.end()) {
-        return it->second;
-    }
-
+  // Check if valid handle
+  if (idx < 0)
     return NULL;
+
+  it = g_ifMap.find(idx);
+  if (it != g_ifMap.end()) {
+    return it->second;
+  }
+
+  return NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -143,23 +161,24 @@ getDriverObject(long h)
 void
 removeDriverObject(long h)
 {
-    std::map<long, Csocketcan *>::iterator it;
-    long idx = h - 1681;
+  std::map<long, CSocketcan *>::iterator it;
+  long idx = h - 1681;
 
-    // Check if valid handle
-    if (idx < 0) return;
+  // Check if valid handle
+  if (idx < 0)
+    return;
 
-    LOCK_MUTEX(g_mapMutex);
-    it = g_ifMap.find(idx);
-    if (it != g_ifMap.end()) {
-        Csocketcan *pObj = it->second;
-        if (NULL != pObj) {
-            delete pObj;
-            pObj = NULL;
-        }
-        g_ifMap.erase(it);
+  LOCK_MUTEX(g_mapMutex);
+  it = g_ifMap.find(idx);
+  if (it != g_ifMap.end()) {
+    CSocketcan *pObj = it->second;
+    if (NULL != pObj) {
+      delete pObj;
+      pObj = NULL;
     }
-    UNLOCK_MUTEX(g_mapMutex);
+    g_ifMap.erase(it);
+  }
+  UNLOCK_MUTEX(g_mapMutex);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -171,32 +190,27 @@ removeDriverObject(long h)
 //
 
 extern "C" long
-VSCPOpen(const char *pUsername,
-         const char *pPassword,
-         const char *pHost,
-         short port,
-         const char *pPrefix,
-         const char *pParameter,
-         unsigned long flags)
+VSCPOpen(const char *pPathConfig, const char *pguid)
 {
-    long h = 0;
+  long h = 0;
 
-    Csocketcan *pdrvObj = new Csocketcan();
-    if (NULL != pdrvObj) {
+  CSocketcan *pdrvObj = new CSocketcan();
+  if (NULL != pdrvObj) {
 
-        if (pdrvObj->open(
-              pUsername, pPassword, pHost, port, pPrefix, pParameter)) {
+    cguid guid(pguid);
+    std::string path = pPathConfig;
+    if (path.length() && pdrvObj->open(path, guid)) {
 
-            if (!(h = addDriverObject(pdrvObj))) {
-                delete pdrvObj;
-            }
-
-        } else {
-            delete pdrvObj;
-        }
+      if (!(h = addDriverObject(pdrvObj))) {
+        delete pdrvObj;
+      }
     }
+    else {
+      delete pdrvObj;
+    }
+  }
 
-    return h;
+  return h;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -206,145 +220,94 @@ VSCPOpen(const char *pUsername,
 extern "C" int
 VSCPClose(long handle)
 {
-    int rv = 0;
+  CSocketcan *pdrvObj = getDriverObject(handle);
+  if (NULL == pdrvObj)
+    return 0;
+  pdrvObj->close();
+  removeDriverObject(handle);
 
-    Csocketcan *pdrvObj = getDriverObject(handle);
-    if (NULL == pdrvObj) return CANAL_ERROR_MEMORY;
-    pdrvObj->close();
-    removeDriverObject(handle);
-    rv = 1;
-    return CANAL_ERROR_SUCCESS;
+  return CANAL_ERROR_SUCCESS;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//  VSCPBlockingSend
+//  VSCPWrite
 //
 
 extern "C" int
-VSCPBlockingSend(long handle, const vscpEvent *pEvent, unsigned long timeout)
+VSCPWrite(long handle, const vscpEvent *pEvent, unsigned long timeout)
 {
-    int rv = 0;
+  CSocketcan *pdrvObj = getDriverObject(handle);
+  if (NULL == pdrvObj) {
+    return CANAL_ERROR_MEMORY;
+  }
 
-    Csocketcan *pdrvObj = getDriverObject(handle);
-    if (NULL == pdrvObj) return CANAL_ERROR_MEMORY;
+  pdrvObj->addEvent2SendQueue(pEvent);
 
-    // vscpEvent *pEventNew = new vscpEvent;
-    // if ( NULL != pEventNew ) {
-    //    copyVSCPEvent( pEventNew, pEvent );
-    pdrvObj->addEvent2SendQueue(pEvent);
-    //}
-    // else {
-    //    return CANAL_ERROR_MEMORY;
-    //}
-
-    return CANAL_ERROR_SUCCESS;
+  return CANAL_ERROR_SUCCESS;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//  VSCPBlockingReceive
+//  VSCPRead
 //
 
 extern "C" int
-VSCPBlockingReceive(long handle, vscpEvent *pEvent, unsigned long timeout)
+VSCPRead(long handle, vscpEvent *pEvent, unsigned long timeout)
 {
-    int rv = 0;
+  int rv = 0;
 
-    // Check pointer
-    if (NULL == pEvent) return CANAL_ERROR_PARAMETER;
+  // Check pointer
+  if (NULL == pEvent) {
+    return CANAL_ERROR_PARAMETER;
+  }
 
-    Csocketcan *pdrvObj = getDriverObject(handle);
-    if (NULL == pdrvObj) return CANAL_ERROR_MEMORY;
+  CSocketcan *pdrvObj = getDriverObject(handle);
+  if (NULL == pdrvObj) {
+    return CANAL_ERROR_MEMORY;
+  }
 
-    struct timespec ts;
-    ts.tv_sec  = 0;
-    ts.tv_nsec = timeout * 1000;
-    if (ETIMEDOUT == sem_timedwait(&pdrvObj->m_semReceiveQueue, &ts)) {
-        return CANAL_ERROR_TIMEOUT;
+  if (-1 == (rv = vscp_sem_wait(&pdrvObj->m_semReceiveQueue, timeout))) {
+    if (ETIMEDOUT == errno) {
+      return CANAL_ERROR_TIMEOUT;
     }
+    else if (EINTR == errno) {
+      spdlog::error("[vscpl2drv-socketcan] Interrupted by a signal handler");
+      return CANAL_ERROR_INTERNAL;
+    }
+    else if (EINVAL == errno) {
+      spdlog::error("[vscpl2drv-socketcan] Invalid semaphore (timout)");
+      return CANAL_ERROR_INTERNAL;
+    }
+    else if (EAGAIN == errno) {
+      spdlog::error("[vscpl2drv-socketcan] Blocking error");
+      return CANAL_ERROR_INTERNAL;
+    }
+    else {
+      spdlog::error("[vscpl2drv-socketcan] Unknown error");
+      return CANAL_ERROR_INTERNAL;
+    }
+  }
 
-    pthread_mutex_lock( &pdrvObj->m_mutexReceiveQueue);
-    vscpEvent *pLocalEvent = pdrvObj->m_receiveList.front();
-    pdrvObj->m_receiveList.pop_front();
-    pthread_mutex_unlock( &pdrvObj->m_mutexReceiveQueue);
-    if (NULL == pLocalEvent) return CANAL_ERROR_MEMORY;
+  pthread_mutex_lock(&pdrvObj->m_mutexReceiveQueue);
+  vscpEvent *pLocalEvent = pdrvObj->m_receiveList.front();
+  pdrvObj->m_receiveList.pop_front();
+  pthread_mutex_unlock(&pdrvObj->m_mutexReceiveQueue);
+  if (NULL == pLocalEvent) {
+    return CANAL_ERROR_MEMORY;
+  }
 
-    vscp_copyVSCPEvent(pEvent, pLocalEvent);
-    vscp_deleteVSCPevent(pLocalEvent);
+  vscp_copyEvent(pEvent, pLocalEvent);
+  vscp_deleteEvent(pLocalEvent);
 
-    return CANAL_ERROR_SUCCESS;
+  return CANAL_ERROR_SUCCESS;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//  VSCPGetLevel
+// VSCPGetVersion
 //
 
 extern "C" unsigned long
-VSCPGetLevel(void)
+VSCPGetVersion(void)
 {
-    return CANAL_LEVEL_USES_TCPIP;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// VSCPGetDllVersion
-//
-
-extern "C" unsigned long
-VSCPGetDllVersion(void)
-{
-    return VSCP_DLL_VERSION;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// VSCPGetVendorString
-//
-
-extern "C" const char *
-VSCPGetVendorString(void)
-{
-    return VSCP_DLL_VENDOR;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// VSCPGetDriverInfo
-//
-
-extern "C" const char *
-VSCPGetDriverInfo(void)
-{
-    return VSCP_SOCKETCAN_DRIVERINFO;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//  VSCPGetVSCPGetWebPageTemplate
-//
-
-extern "C" long
-VSCPGetWebPageTemplate(long handle, const char *url, char *page)
-{
-    page = NULL;
-
-    // Not implemented
-    return -1;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//  VSCPGetVSCPWebPageInfo
-//
-
-extern "C" int
-VSCPGetWebPageInfo(long handle, const struct vscpextwebpageinfo *info)
-{
-    // Not implemented
-    return -1;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//  VSCPWebPageupdate
-//
-
-extern "C" int
-VSCPWebPageupdate(long handle, const char *url)
-{
-    // Not implemented
-    return -1;
+  unsigned long ver = MAJOR_VERSION << 24 | MINOR_VERSION << 16 | RELEASE_VERSION << 8 | BUILD_VERSION;
+  return ver;
 }

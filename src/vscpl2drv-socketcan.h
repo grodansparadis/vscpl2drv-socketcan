@@ -8,7 +8,7 @@
 //
 // This file is part of the VSCP (http://www.vscp.org)
 //
-// Copyright (C) 2000-2019 Ake Hedman,
+// Copyright (C) 2000-2021 Ake Hedman,
 // Ake Hedman, Grodans Paradis AB, <akhe@grodansparadis.com>
 //
 // This file is distributed in the hope that it will be useful,
@@ -41,6 +41,14 @@
 #include <vscpremotetcpif.h>
 #include <canal_macro.h>
 
+#include <json.hpp> // Needs C++11  -std=c++11
+
+#include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/spdlog.h"
+
+// https://github.com/nlohmann/json
+using json = nlohmann::json;
+
 #include "socketcan.h"
 
 #ifndef BOOL
@@ -55,22 +63,6 @@ typedef int BOOL;
 #define FALSE 0
 #endif
 
-#define VSCP_DLL_SONAME "vscpl2drv_socketcan15"
-
-// This is the version info for this DLL - Change to your own value
-#define VSCP_DLL_VERSION        0x000003
-
-// This is the vendor string - Change to your own value
-#define VSCP_DLL_VENDOR "Grodans Paradis AB, Sweden, https://www.grodansparadis.com"
-
-// Driver information.
-#define VSCP_SOCKETCAN_DRIVERINFO "<?xml version = \"1.0\" encoding = \"UTF-8\" ?>" \
-"<!-- Version 0.0.1    2013-05-11   -->" \
-"<config level=\"1|2\"blocking\"true|false\" description=\"bla bla bla bla\">" \
-"   <item pos=\"0\" type=\"string\" description\"Serial number for Tellstick\"/>" \
-"   <item pos=\"1\" type=\"path\" description\"Path to configuration file\"/>" \
-"</config>"
-
 
 /*!
     Add a driver object
@@ -79,7 +71,7 @@ typedef int BOOL;
     @return handle or 0 for error
 */
 long
-addDriverObject(Csocketcan *pif);
+addDriverObject(CSocketcan *pif);
 
 /*!
     Get a driver object from its handle
@@ -88,7 +80,7 @@ addDriverObject(Csocketcan *pif);
     @return pointer to object or NULL if invalid
             handle.
 */
-Csocketcan *
+CSocketcan *
 getDriverObject(long handle);
 
 /*!

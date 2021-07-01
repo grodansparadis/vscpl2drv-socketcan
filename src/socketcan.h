@@ -37,47 +37,76 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <hlo.h>
+#include <remotevariablecodes.h>
 #include <canal.h>
 #include <canal_macro.h>
-#include <dllist.h>
 #include <guid.h>
 #include <vscp.h>
-#include <vscpremotetcpif.h>
+#include <vscp_class.h>
+#include <vscp_type.h>
+#include <vscpdatetime.h>
+#include <vscphelper.h>
 
-#define VSCP_LEVEL2_DLL_SOCKETCAN_OBJ_MUTEX                                    \
-    "___VSCP__DLL_L2SOCKETCAN_OBJ_MUTEX____"
+#include <json.hpp>  // Needs C++11  -std=c++11
 
-#define VSCP_SOCKETCAN_LIST_MAX_MSG 2048
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+
+// https://github.com/nlohmann/json
+using json = nlohmann::json;
+
+const uint16_t MAX_ITEMS_IN_QUEUE = 32000;
 
 // Forward declarations
-class CSocketCanWorkerTread;
-class VscpRemoteTcpIf;
-class wxFile;
 
-class Csocketcan
+class CSocketcan
 {
   public:
     /// Constructor
-    Csocketcan();
+    CSocketcan();
 
     /// Destructor
-    virtual ~Csocketcan();
+    virtual ~CSocketcan();
 
     /*!
         Open
         @return True on success.
      */
-    bool open(const char *pUsername,
-              const char *pPassword,
-              const char *pHost,
-              short port,
-              const char *pPrefix,
-              const char *pConfig);
+    bool open(std::string &path, const cguid &guid);
 
     /*!
         Flush and close the log file
      */
     void close(void);
+
+    /*!
+    Parse HLO object
+  */
+  bool parseHLO(uint16_t size, uint8_t *inbuf, CHLO *phlo);
+
+  /*!
+    Handle high level object
+  */
+  bool handleHLO(vscpEvent *pEvent);
+
+  /*!
+    Read encryption key
+    @param path Path to file containing key
+    @return true on success, false on failure
+  */
+  bool readEncryptionKey(const std::string &path);
+
+  /*!
+    Load configuration if allowed to do so
+    @return true on success, false on failure
+  */
+  bool doLoadConfig(void);
+
+  /*!
+    Save configuration if allowed to do so
+  */
+  bool doSaveConfig(void);
 
     /*!
             Add event to send queue
@@ -86,38 +115,66 @@ class Csocketcan
 
   public:
   
+    /// Parsed Config file
+    json m_j_config;
+
+    // ------------------------------------------------------------------------
+
+    // * * * Configuration    
+
+    /// enable/disable debug output
+    bool m_bDebug;
+
+    /// Path to configuration file
+    std::string m_path;
+
+    /// True if config is remote writable
+    bool m_bWriteEnable;
+    
+    /// interface to listen on
+    std::string m_interface;
+
+    /// Driver flags
+    uint32_t m_flags;
+
+    /////////////////////////////////////////////////////////
+    //                      Logging
+    /////////////////////////////////////////////////////////
+    
+    bool m_bEnableFileLog;                    // True to enable logging
+    spdlog::level::level_enum m_fileLogLevel; // log level
+    std::string m_fileLogPattern;             // log file pattern
+    std::string m_path_to_log_file;           // Path to logfile      
+    uint32_t m_max_log_size;                  // Max size for logfile before rotating occures 
+    uint16_t m_max_log_files;                 // Max log files to keep
+
+    bool m_bConsoleLogEnable;                     // True to enable logging to console
+    spdlog::level::level_enum m_consoleLogLevel;  // Console log level
+    std::string m_consoleLogPattern;              // Console log pattern
+
+    // ------------------------------------------------------------------------
+
     /// Run flag
     bool m_bQuit;
 
-    /// Server supplied username
-    std::string m_username;
+    /// Response timeout
+    uint32_t m_responseTimeout;
 
-    /// Server supplied password
-    std::string m_password;
-
-    /// server supplied prefix
-    std::string m_prefix;
-
-    /// server supplied host
-    std::string m_host;
-
-    /// Server supplied port
-    short m_port;
-
-    /// socketcan interface to use
-    std::string m_interface;
-
-    /// Filter
-    vscpEventFilter m_vscpfilter;
+    /// Filters for input/output
+    vscpEventFilter m_filterIn;
+    vscpEventFilter m_filterOut;
 
     /// Get GUID for this interface.
-    // cguid m_ifguid;
+    cguid m_guid;
+
+    // The default random encryption key
+    uint8_t m_vscp_key[32] = {
+        0x2d, 0xbb, 0x07, 0x9a, 0x38, 0x98, 0x5a, 0xf0, 0x0e, 0xbe, 0xef, 0xe2, 0x2f, 0x9f, 0xfa, 0x0e,
+        0x7f, 0x72, 0xdf, 0x06, 0xeb, 0xe4, 0x45, 0x63, 0xed, 0xf4, 0xa1, 0x07, 0x3c, 0xab, 0xc7, 0xd4
+    };
 
     /// Pointer to worker threads
     pthread_t m_threadWork;
-
-    /// VSCP server interface
-    VscpRemoteTcpIf m_srv;
 
     std::list<vscpEvent *> m_sendList;
     std::list<vscpEvent *> m_receiveList;

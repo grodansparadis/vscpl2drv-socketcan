@@ -3,11 +3,9 @@
 Socketcan level II driver
 
 - **Available for:** Linux
-- **Driver Linux**: vscpl2_socketcandrv.so
+- **Driver Linux**: libvscpl2_socketcandrv.so
 
 This driver interface SocketCAN, the official CAN API of the Linux kernel, has been included in the kernel for a long time now. Meanwhile, the official Linux repository has device drivers for all major CAN chipsets used in various architectures and bus types. SocketCAN offers the user a multiuser capable as well as hardware independent socket-based API for CAN based communication and configuration. Socketcan nowadays give access to the major CAN adapters that is available on the market. Note that as CAN only can handle Level I events only events up to class < 1024 can be sent to this device. Other events will be filtered out.
-
-
 
 The configuration string have the following format
 

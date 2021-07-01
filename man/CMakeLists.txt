@@ -27,14 +27,14 @@ if (${PANDOCCOMMAND_FOUND})
 
     ADD_CUSTOM_COMMAND(
         TARGET man
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/vscpl2drv-tcpiplink.1.md
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/vscpl2drv-socketcan.1.md
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMAND pandoc -s -t man ${CMAKE_CURRENT_SOURCE_DIR}/vscpl2drv-tcpiplink.1.md -o ${CMAKE_CURRENT_BINARY_DIR}/vscpl2drv-tcpiplink.1
-        OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/vscpl2drv-tcpiplink.1
+        COMMAND pandoc -s -t man ${CMAKE_CURRENT_SOURCE_DIR}/vscpl2drv-socketcan.1.md -o ${CMAKE_CURRENT_BINARY_DIR}/vscpl2drv-socketcan.1
+        OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/vscpl2drv-socketcan.1
 )
 endif()
 
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/vscpl2drv-tcpiplink.1
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/vscpl2drv-socketcan.1
   DESTINATION ${CMAKE_INSTALL_MANDIR}/man1/
 )

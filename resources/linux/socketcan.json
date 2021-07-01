@@ -1,6 +1,8 @@
 {
-  "debug" : false,
+  "debug" : true,
   "write" : false,
+  "interface": "vcan0",
+  "flags": 0,
   "key-file": "/var/vscp/vscp.key",
   "encryption" : "none|aes128|aes192|aes256",
   "logging": {
@@ -14,26 +16,6 @@
     "file-log-max-size": 50000,
     "file-log-max-files": 7
   }, 
-  "remote" : {
-    "host" : "localhost",
-    "port" : 9598,
-    "user" : "admin",
-    "password" : "secret",
-    "response-timeout": 0
-  },
-  "tls": {
-    "certificate" : "/srv/vscp/certs/tcpip_server.pem",
-    "certificate-chain" : "",
-    "verify-peer" : false,
-    "ca-path" : "",
-    "ca-file" : "",
-    "verify-depth" : 9,
-    "default-verify-paths" : true,
-    "cipher-list" : "DES-CBC3-SHA:AES128-SHA:AES128-GCM-SHA256",
-    "protocol-version" : 3,
-    "ssl_cache_timeout": -1,
-    "short-trust" : false
-  },
   "filter" : {
     "in-filter" : "incoming filter on string form",
     "in-mask" : "incoming mask on string form",
