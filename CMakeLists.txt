@@ -304,6 +304,6 @@ ELSE()
           LIBRARY DESTINATION ${CMAKE_INSTALL_FULL_}${VSCP_LEVEL2_DRV_DIR}
           RUNTIME DESTINATION ${CMAKE_INSTALL_MANDIR}            
           RESOURCE DESTINATION ${CMAKE_INSTALL_FULL_}/var/lib/vscp/vscpd) 
-  install(FILES ${CMAKE_SOURCE_DIR}/resources/linux/tcpiplink.json
+  install(FILES ${CMAKE_SOURCE_DIR}/resources/linux/socketcan.json
           DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/vscpl2drv-socketcan/")      
 ENDIF()
