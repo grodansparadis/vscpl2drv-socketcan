@@ -756,7 +756,7 @@ workerThread(void *pData)
 
   strncpy(devname, pObj->m_interface.c_str(), sizeof(devname) - 1);
   if (pObj->m_bDebug) {
-    spdlog::debug("CWriteSocketCanTread: Interface: '{}'", ifname);
+    spdlog::debug("CWriteSocketCanTread: Interface: '{}'", pObj->m_interface);
   }
 
   while (!pObj->m_bQuit) {
