@@ -56,6 +56,8 @@
 // https://github.com/nlohmann/json
 using json = nlohmann::json;
 
+
+
 const uint16_t MAX_ITEMS_IN_QUEUE = 32000;
 
 // Forward declarations
@@ -63,6 +65,9 @@ const uint16_t MAX_ITEMS_IN_QUEUE = 32000;
 class CSocketcan
 {
   public:
+
+    const u_int32_t flag_fd_enable = 0x00008000; // FD frames will be handled
+
     /// Constructor
     CSocketcan();
 
@@ -141,12 +146,12 @@ class CSocketcan
     //                      Logging
     /////////////////////////////////////////////////////////
     
-    bool m_bEnableFileLog;                    // True to enable logging
-    spdlog::level::level_enum m_fileLogLevel; // log level
-    std::string m_fileLogPattern;             // log file pattern
-    std::string m_path_to_log_file;           // Path to logfile      
-    uint32_t m_max_log_size;                  // Max size for logfile before rotating occures 
-    uint16_t m_max_log_files;                 // Max log files to keep
+    bool m_bEnableFileLog;                        // True to enable logging
+    spdlog::level::level_enum m_fileLogLevel;     // log level
+    std::string m_fileLogPattern;                 // log file pattern
+    std::string m_path_to_log_file;               // Path to logfile      
+    uint32_t m_max_log_size;                      // Max size for logfile before rotating occurs 
+    uint16_t m_max_log_files;                     // Max log files to keep
 
     bool m_bConsoleLogEnable;                     // True to enable logging to console
     spdlog::level::level_enum m_consoleLogLevel;  // Console log level
@@ -167,7 +172,7 @@ class CSocketcan
     /// Get GUID for this interface.
     cguid m_guid;
 
-    // The default random encryption key
+    /// The default random encryption key
     uint8_t m_vscp_key[32] = {
         0x2d, 0xbb, 0x07, 0x9a, 0x38, 0x98, 0x5a, 0xf0, 0x0e, 0xbe, 0xef, 0xe2, 0x2f, 0x9f, 0xfa, 0x0e,
         0x7f, 0x72, 0xdf, 0x06, 0xeb, 0xe4, 0x45, 0x63, 0xed, 0xf4, 0xa1, 0x07, 0x3c, 0xab, 0xc7, 0xd4
@@ -180,8 +185,8 @@ class CSocketcan
     std::list<vscpEvent *> m_receiveList;
 
     /*!
-    Event object to indicate that there is an event in the output queue
-     */
+      Event object to indicate that there is an event in the output queue
+    */
     sem_t m_semSendQueue;
     sem_t m_semReceiveQueue;
 

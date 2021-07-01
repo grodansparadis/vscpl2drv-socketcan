@@ -31,7 +31,6 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <syslog.h>
 #include <unistd.h>
 
 // Different on Kernel 2.6 and cansocket examples
@@ -152,202 +151,6 @@ CSocketcan::~CSocketcan()
 
 // ----------------------------------------------------------------------------
 
-/*
-    XML Setup
-    =========
-
-    <setup interface=""
-            filter = ""
-            mask = "" />
-*/
-
-// ----------------------------------------------------------------------------
-
-// int depth_setup_parser = 0;
-
-// void
-// startSetupParser( void *data, const char *name, const char **attr )
-// {
-//     CSocketcan *pObj = (CSocketcan *)data;
-//     if (NULL == pObj) return;
-
-//     if ((0 == strcmp(name, "setup")) && (0 == depth_setup_parser)) {
-
-//         for (int i = 0; attr[i]; i += 2) {
-
-//             std::string attribute = attr[i + 1];
-//             vscp_trim(attribute);
-
-//             if (0 == strcasecmp(attr[i], "interface")) {
-//                 if (!attribute.empty()) {
-//                     pObj->m_interface = attribute;
-//                 }
-//             } else if (0 == strcasecmp(attr[i], "filter")) {
-//                 if (!attribute.empty()) {
-//                     if (!vscp_readFilterFromString(&pObj->m_vscpfilter,
-//                                                    attribute)) {
-//                         syslog(LOG_ERR, "Unable to read event receive filter.");
-//                     }
-//                 }
-//             } else if (0 == strcasecmp(attr[i], "mask")) {
-//                 if (!attribute.empty()) {
-//                     if (!vscp_readMaskFromString(&pObj->m_vscpfilter,
-//                                                  attribute)) {
-//                         syslog(LOG_ERR, "Unable to read event receive mask.");
-//                     }
-//                 }
-//             }
-//         }
-
-//     }
-
-//     depth_setup_parser++;
-// }
-
-// void
-// endSetupParser( void *data, const char *name )
-// {
-//     depth_setup_parser--;
-// }
-
-// ----------------------------------------------------------------------------
-
-//////////////////////////////////////////////////////////////////////
-// open
-//
-//
-
-// bool
-// CSocketcan::open(const char *pUsername,
-//                  const char *pPassword,
-//                  const char *pHost,
-//                  short port,
-//                  const char *pPrefix,
-//                  const char *pConfig)
-// {
-//     bool rv           = true;
-//     std::string wxstr = std::string(pConfig);
-
-//     m_username = std::string(pUsername);
-//     m_password = std::string(pPassword);
-//     m_host     = std::string(pHost);
-//     m_port     = port;
-//     m_prefix   = std::string(pPrefix);
-
-//     // Parse the configuration string. It should
-//     // have the following form path
-
-//     std::deque<std::string> tokens;
-//     vscp_split( tokens, std::string(pConfig), ";" );
-
-//     // Check for socketcan interface in configuration string
-//     if (!tokens.empty()) {
-//         // Interface
-//         m_interface = tokens.front();
-//         tokens.pop_front();
-//     }
-
-//     // First log on to the host and get configuration
-//     // variables
-
-//     if (VSCP_ERROR_SUCCESS != m_srv.doCmdOpen(m_host,
-//                                               m_port,
-//                                               m_username,
-//                                               m_password)) {
-//         syslog(LOG_ERR,
-//                "%s",
-//                (const char *)"Unable to connect to "
-//                              "VSCP TCP/IP interface. Terminating!");
-//         return false;
-//     }
-
-//     // Find the channel id
-//     uint32_t ChannelID;
-//     m_srv.doCmdGetChannelID(&ChannelID);
-
-//     // m_srv.doCmdGetGUID( m_ifguid );
-
-//     // The server should hold configuration data for each sensor
-//     // we want to monitor.
-//     //
-//     // We look for
-//     //
-//     //	 _interface - The socketcan interface to use. Typically this
-//     //	 is “can0, can0, can1...
-//     //
-//     //   _filter - Standard VSCP filter in string form.
-//     //				   1,0x0000,0x0006,
-//     //				   ff:ff:ff:ff:ff:ff:ff:01:00:00:00:00:00:00:00:00
-//     //				as priority,class,type,GUID
-//     //				Used to filter what events that is received from
-//     //				the socketcan interface. If not give all events
-//     //				are received.
-//     //	 _mask - Standard VSCP mask in string form.
-//     //				   1,0x0000,0x0006,
-//     //				   ff:ff:ff:ff:ff:ff:ff:01:00:00:00:00:00:00:00:00
-//     //				as priority,class,type,GUID
-//     //				Used to filter what events that is received from
-//     //				the socketcan interface. If not give all events
-//     //				are received.
-//     //
-//     // <setup interface="vcan0"
-//     //          filter=""
-//     //          mask="" />
-//     //
-
-//     std::string str;
-//     std::string strName = m_prefix + std::string("_interface");
-//     m_srv.getRemoteVariableValue(strName, m_interface);
-
-//     strName = m_prefix + std::string("_filter");
-//     if (m_srv.getRemoteVariableValue(strName, str)) {
-//         vscp_readFilterFromString(&m_vscpfilter, str);
-//     }
-
-//     strName = m_prefix + std::string("_mask");
-//     if (m_srv.getRemoteVariableValue(strName, str)) {
-//         vscp_readMaskFromString(&m_vscpfilter, str);
-//     }
-
-//     m_srv.doClrInputQueue();
-
-//     // XML setup
-//     std::string strSetupXML;
-//     strName = m_prefix + std::string("_setup");
-//     if (VSCP_ERROR_SUCCESS ==
-//         m_srv.getRemoteVariableValue(strName, strSetupXML, true)) {
-//         XML_Parser xmlParser = XML_ParserCreate("UTF-8");
-//         XML_SetUserData(xmlParser, this);
-//         XML_SetElementHandler(xmlParser, startSetupParser, endSetupParser);
-
-//         int bytes_read;
-//         void *buff = XML_GetBuffer(xmlParser, XML_BUFF_SIZE);
-
-//         strncpy((char *)buff, strSetupXML.c_str(), strSetupXML.length());
-
-//         bytes_read = strSetupXML.length();
-//         if (!XML_ParseBuffer(xmlParser, bytes_read, bytes_read == 0)) {
-//             syslog(LOG_ERR, "Failed parse XML setup.");
-//         }
-
-//         XML_ParserFree(xmlParser);
-//     }
-
-//     // start the workerthread
-//     if ( pthread_create( &m_threadWork,
-//                             NULL,
-//                             workerThread,
-//                             this ) ) {
-
-//         syslog( LOG_ERR, "Unable to start worker thread." );
-//         return false;
-//     }
-
-//     // Close the channel
-//     m_srv.doCmdClose();
-
-//     return rv;
-// }
 
 //////////////////////////////////////////////////////////////////////
 // open
@@ -947,14 +750,14 @@ workerThread(void *pData)
 
   CSocketcan *pObj = (CSocketcan *) pData;
   if (NULL == pObj) {
-    syslog(LOG_ERR, "No object data supplied for worker thread");
+    spdlog::error("No object data supplied for worker thread");
     return NULL;
   }
 
   strncpy(devname, pObj->m_interface.c_str(), sizeof(devname) - 1);
-#if DEBUG
-  syslog(LOG_ERR, "CWriteSocketCanTread: Interface: %s\n", ifname);
-#endif
+  if (pObj->m_bDebug) {
+    spdlog::debug("CWriteSocketCanTread: Interface: '{}'", ifname);
+  }
 
   while (!pObj->m_bQuit) {
 
@@ -966,11 +769,7 @@ workerThread(void *pData)
         continue;
       }
 
-      syslog(LOG_ERR,
-             "%s",
-             (const char *) "CReadSocketCanTread: Error while "
-                            "opening socket. Terminating!");
-
+      spdlog::error("CReadSocketCanTread: Error while opening socket. Terminating!");
       break;
     }
 
@@ -980,25 +779,22 @@ workerThread(void *pData)
     addr.can_family  = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
 
-#ifdef DEBUG
-    printf("using interface name '%s'.\n", ifr.ifr_name);
-#endif
+    if (pObj->m_bDebug) {
+      spdlog::debug("using interface name '{}'.", ifr.ifr_name);
+    }
 
     // try to switch the socket into CAN FD mode
     setsockopt(sock, SOL_CAN_RAW, CAN_RAW_FD_FRAMES, &canfd_on, sizeof(canfd_on));
 
     if (bind(sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-      syslog(LOG_ERR,
-             "%s",
-             (const char *) "CReadSocketCanTread: Error in socket bind. "
-                            "Terminating!");
+      spdlog::error("CReadSocketCanTread: Error in socket bind. Terminating!");
       close(sock);
       sleep(2);
       continue;
     }
 
     bool bInnerLoop = true;
-    while (pObj->m_bQuit && bInnerLoop) {
+    while (!pObj->m_bQuit && bInnerLoop) {
 
       FD_ZERO(&rdfs);
       FD_SET(sock, &rdfs);
@@ -1039,8 +835,9 @@ workerThread(void *pData)
         }
 
         // Must be Extended
-        if (!(frame.can_id & CAN_EFF_FLAG))
+        if (!(frame.can_id & CAN_EFF_FLAG)) {
           continue;
+        }
 
         // Mask of control bits
         frame.can_id &= CAN_EFF_MASK;
@@ -1048,6 +845,8 @@ workerThread(void *pData)
         vscpEvent *pEvent = new vscpEvent();
         if (NULL != pEvent) {
 
+          // This can lead to level I frames having to
+          // much data. Later code will handel this case.
           pEvent->pdata = new uint8_t[frame.len];
           if (NULL == pEvent->pdata) {
             delete pEvent;
@@ -1056,7 +855,7 @@ workerThread(void *pData)
 
           // GUID will be set to GUID of interface
           // by driver interface with LSB set to nickname
-          memset(pEvent->GUID, 0, 16);
+          memcpy(pEvent->GUID, pObj->m_guid.getGUID(), 16);
           pEvent->GUID[VSCP_GUID_LSB] = frame.can_id & 0xff;
 
           // Set VSCP class
