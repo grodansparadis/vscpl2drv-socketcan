@@ -7,8 +7,7 @@
 //
 // This file is part of the VSCP Project (http://www.vscp.org)
 //
-// Copyright (C) 2000-2020 Ake Hedman,
-// Grodans Paradis AB, <akhe@grodansparadis.com>
+// Copyright (c) 2000-2026 Ake Hedman and contributors, the VSCP Project
 //
 // This file is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -54,8 +53,8 @@
 #include <expat.h>
 
 #include <vscp.h>
-#include <vscp_class.h>
-#include <vscp_type.h>
+#include <vscp-class.h>
+#include <vscp-type.h>
 #include <vscphelper.h>
 #include <vscpremotetcpif.h>
 
@@ -71,7 +70,7 @@
 // Buffer for XML parser
 #define XML_BUFF_SIZE 10000
 
-#include <json.hpp> // Needs C++11  -std=c++11
+#include <nlohmann/json.hpp> // Needs C++11  -std=c++11
 #include <mustache.hpp>
 
 #include <spdlog/async.h>

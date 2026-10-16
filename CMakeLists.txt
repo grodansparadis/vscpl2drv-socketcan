@@ -2,7 +2,7 @@
 #
 # Build instructions for VSCP Works.
 #
-# Copyright (c) 2000-2021 Åke Hedman, the VSCP Project
+# Copyright (c) 2000-2026 Ake Hedman and contributors, the VSCP Project
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -75,9 +75,12 @@ endif()
 option(USE_SSL "Use SSL" TRUE)
 
 ## --- C++11 build flags ---
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
+
+# Generate position-independent code (-fPIC on Unix)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Build locations
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
@@ -95,39 +98,17 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # --- System Libraries ---
 include(GNUInstallDirs)
 
-# --- Path to vscp --- 
-if (NOT DEFINED VSCP_PATH)
-set (VSCP_PATH "${PROJECT_SOURCE_DIR}/../vscp/")
-endif()
+set(LIBS_SYSTEM c stdc++)
 
-IF(WIN32)
-	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    add_definitions(-DWIN32_LEAN_AND_MEANS)
-    add_definitions(-DOPENSSL_API_1_1)
-    add_definitions(-D_POSIX_C_SOURCE)    
-    add_definitions(-DVCPKG_TARGET_TRIPLET=x64-windows)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-    set(LIBS_SYSTEM ws2_32)
-ELSEIF(UNIX)
-    set(LIBS_SYSTEM c stdc++)
-ENDIF()
 
 #   ===========================  cpack  ===========================
 IF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
   INCLUDE(InstallRequiredSystemLibraries)
 
-  IF(WIN32)
-  SET(CPACK_SET_DESTDIR OFF)
-  ELSE()
   SET(CPACK_SET_DESTDIR ON)
   SET(CPACK_PACKAGING_INSTALL_PREFIX "/var/lib/vscp/drivers")
-  ENDIF()
-
-  IF(WIN32)
-  SET(CPACK_GENERATOR "NSIS" "ZIP")
-  ELSE()
   SET(CPACK_GENERATOR "DEB" "RPM" "TGZ" "ZIP")
-  ENDIF()
+
   
   set(CPACK_PACKAGE_NAME ${APP_LOW_NAME})
   set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY ${APP_NAME})
@@ -145,22 +126,14 @@ IF(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
   SET(CPACK_NSIS_HELP_LINK ${APP_URL})
   SET(CPACK_NSIS_URL_INFO_ABOUT ${APP_URL})
 
-  IF(NOT DEFINED WIN32)
+
     SET(CPACK_DEBIAN_PACKAGE_DEPENDS " libexpat-dev, libssl-dev ")
     SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
     SET(CPACK_DEBIAN_PACKAGE_SECTION "network")
     SET(CPACK_DEBIAN_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
-  ENDIF()
+
 
   SET(CPACK_COMPONENTS_ALL Libraries ApplicationData)
-
-  # Configure file with custom definitions for NSIS.
-  IF(WIN32)
-    configure_file(
-      ${PROJECT_SOURCE_DIR}/resources/nsis/NSIS.definitions.nsh.in
-      ${CMAKE_CURRENT_BINARY_DIR}/resources/nsis/NSIS.definitions.nsh
-    )
-  ENDIF(WIN32)
 
   # Load packaging facilities.
   INCLUDE(CPack)
@@ -176,23 +149,54 @@ find_package(Threads REQUIRED)
 #openssl
 find_package(OpenSSL REQUIRED)
 
-# Windows Libs
-IF(WIN32)
-  #find_package(pthreads REQUIRED)
 
-  # Expat C library
-  find_package(expat CONFIG REQUIRED)
-ELSE(WIN32)
+include(FetchContent)
 
-ENDIF(WIN32)
+set(VSCP_FETCH_CONTENT_OPTIONS)
+if(NOT CMAKE_VERSION VERSION_LESS "3.18")
+  list(APPEND VSCP_FETCH_CONTENT_OPTIONS SOURCE_SUBDIR "__vscp_sources_only__")
+endif()
+if(NOT CMAKE_VERSION VERSION_LESS "3.24")
+  list(APPEND VSCP_FETCH_CONTENT_OPTIONS DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+endif()
 
-# Set sockettcp build flags
-string(FIND "${OPENSSL_VERSION}" "1.1." SSL_VER_POS)
-IF(${SSL_VER_POS})
-    add_definitions(-DOPENSSL_API_1_0)
-ELSE()
-    add_definitions(-DOPENSSL_API_1_1)
-ENDIF()
+FetchContent_Declare(
+  vscp
+  # Only a handful of VSCP source files are compiled directly into vscpd, so
+  # there is no need to clone the repository. A pinned source tarball avoids
+  # fetching ~1.2GB of git history plus ~400MB of submodules that this project
+  # never uses.
+  # Get URL_HASH
+  # curl -sL https://codeload.github.com/grodansparadis/vscp/tar.gz/<commit> | sha256sum
+  URL https://codeload.github.com/grodansparadis/vscp/tar.gz/911239f8fc7a5f084fe3435c6c7f2ee31e9f4c90
+  URL_HASH SHA256=a5e1c8154f22139082f857901343580dd510b8fc58c7cfb9d23d6e269cca24fa
+  ${VSCP_FETCH_CONTENT_OPTIONS}
+)
+# Make the VSCP sources available without adding its standalone library targets
+# to this build. The daemon compiles only the VSCP source files listed below.
+if(CMAKE_VERSION VERSION_LESS "3.18")
+  FetchContent_GetProperties(vscp)
+  if(NOT vscp_POPULATED)
+    FetchContent_Populate(vscp)
+  endif()
+else()
+  FetchContent_MakeAvailable(vscp)
+endif()
+
+FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.17.0
+)
+FetchContent_MakeAvailable(spdlog)
+
+FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.12.0
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
 
 # Misc defines
 #add_definitions(-DDEBUG_TRACE)
@@ -207,103 +211,70 @@ add_library(vscpl2drv-socketcan
   ${CMAKE_SOURCE_DIR}/src/vscpl2drv-socketcan.cpp
   ${CMAKE_SOURCE_DIR}/src/socketcan.h
   ${CMAKE_SOURCE_DIR}/src/socketcan.cpp
-  ${VSCP_PATH}/src/vscp/common/userlist.h
-  ${VSCP_PATH}/src/vscp/common/userlist.cpp
-  ${VSCP_PATH}/src/vscp/common/clientlist.h
-  ${VSCP_PATH}/src/vscp/common/clientlist.cpp    
-  ${VSCP_PATH}/src/common/third_party/mustache.hpp
-  ${VSCP_PATH}/src/common/third_party/spdlog-1.8.5/include
-  ${VSCP_PATH}/src/vscp/common/vscp.h
-  ${VSCP_PATH}/src/vscp/common/vscpremotetcpif.h
-  ${VSCP_PATH}/src/vscp/common/vscpremotetcpif.cpp
-  ${VSCP_PATH}/src/vscp/common/vscpdatetime.h
-  ${VSCP_PATH}/src/vscp/common/vscpdatetime.cpp
-  ${VSCP_PATH}/src/vscp/common/guid.h
-  ${VSCP_PATH}/src/vscp/common/guid.cpp
-  ${VSCP_PATH}/src/vscp/common/mdf.h
-  ${VSCP_PATH}/src/vscp/common/mdf.cpp
-  ${VSCP_PATH}/src/vscp/common/vscphelper.h
-  ${VSCP_PATH}/src/vscp/common/vscphelper.cpp
-  ${VSCP_PATH}/src/vscp/common/canal.h
-  ${VSCP_PATH}/src/common/sockettcp.h
-  ${VSCP_PATH}/src/common/sockettcp.c
-  ${VSCP_PATH}/src/common/vscpbase64.h
-  ${VSCP_PATH}/src/common/vscpbase64.c
-  ${VSCP_PATH}/src/common/vscp_aes.h
-  ${VSCP_PATH}/src/common/vscp_aes.c
-  ${VSCP_PATH}/src/common/crc.h
-  ${VSCP_PATH}/src/common/crc.c
-  ${VSCP_PATH}/src/common/crc8.h
-  ${VSCP_PATH}/src/common/crc8.c
-  ${VSCP_PATH}/src/common/vscpmd5.h
-  ${VSCP_PATH}/src/common/vscpmd5.c
-  ${VSCP_PATH}/src/common/fastpbkdf2.h
-  ${VSCP_PATH}/src/common/fastpbkdf2.c
+  # ${VSCP_PATH}/src/vscp/common/userlist.h
+  # ${VSCP_PATH}/src/vscp/common/userlist.cpp
+  # ${VSCP_PATH}/src/vscp/common/clientlist.h
+  # ${VSCP_PATH}/src/vscp/common/clientlist.cpp    
+  # ${VSCP_PATH}/src/common/third_party/mustache.hpp
+  # ${VSCP_PATH}/src/common/third_party/spdlog-1.8.5/include
+  # ${VSCP_PATH}/src/vscp/common/vscp.h
+  # ${VSCP_PATH}/src/vscp/common/vscpremotetcpif.h
+  # ${VSCP_PATH}/src/vscp/common/vscpremotetcpif.cpp
+  # ${VSCP_PATH}/src/vscp/common/vscpdatetime.h
+  # ${VSCP_PATH}/src/vscp/common/vscpdatetime.cpp
+  # ${VSCP_PATH}/src/vscp/common/guid.h
+  # ${VSCP_PATH}/src/vscp/common/guid.cpp
+  # ${VSCP_PATH}/src/vscp/common/mdf.h
+  # ${VSCP_PATH}/src/vscp/common/mdf.cpp
+  # ${VSCP_PATH}/src/vscp/common/vscphelper.h
+  # ${VSCP_PATH}/src/vscp/common/vscphelper.cpp
+  # ${VSCP_PATH}/src/vscp/common/canal.h
+  # ${VSCP_PATH}/src/common/sockettcp.h
+  # ${VSCP_PATH}/src/common/sockettcp.c
+  # ${VSCP_PATH}/src/common/vscpbase64.h
+  # ${VSCP_PATH}/src/common/vscpbase64.c
+  # ${VSCP_PATH}/src/common/vscp_aes.h
+  # ${VSCP_PATH}/src/common/vscp_aes.c
+  # ${VSCP_PATH}/src/common/crc.h
+  # ${VSCP_PATH}/src/common/crc.c
+  # ${VSCP_PATH}/src/common/crc8.h
+  # ${VSCP_PATH}/src/common/crc8.c
+  # ${VSCP_PATH}/src/common/vscpmd5.h
+  # ${VSCP_PATH}/src/common/vscpmd5.c
+  # ${VSCP_PATH}/src/common/fastpbkdf2.h
+  # ${VSCP_PATH}/src/common/fastpbkdf2.c
 ) 
 
-if (WIN32)    
-  find_package(pthreads REQUIRED)
-  find_path(PTHREAD_INCLUDE_DIR pthread.h)
 
-  include_directories( PUBLIC src/
-    ${VSCP_PATH}/src/vscp/common/  
-    ${VSCP_PATH}/src/common
-    ${VSCP_PATH}/src/common/third_party
-    ${VSCP_PATH}/src/common/third_party/nlohmann
-    ${VSCP_PATH}/src/common/third_party/spdlog-1.8.5/include
-    ${PThreads4W_INCLUDE_DIR}
-    ${CMAKE_BINARY_DIR}
-    ${OPENSSL_INCLUDE_DIR}
-    ${LOCAL_WIN_INCLUDE}
-    ${LOCAL_SYSLOG_INCLUDE} )
-else()
-  include_directories( PUBLIC src/
-    ${VSCP_PATH}/src/vscp/common/
-    ${VSCP_PATH}/src/common
-    ${VSCP_PATH}/src/common/third_party
-    ${VSCP_PATH}/src/common/third_party/nlohmann
-    ${VSCP_PATH}/src/common/third_party/spdlog-1.8.5/include
-    ${CMAKE_BINARY_DIR}
-    ${OPENSSL_INCLUDE_DIR}
-    ${LOCAL_SYSLOG_INCLUDE} )
-endif()   
+include_directories( PUBLIC src/
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${vscp_SOURCE_DIR}/src/common/"
+    "${vscp_SOURCE_DIR}/src/vscp/common/"
+    "${CMAKE_BINARY_DIR}"
+    "${OPENSSL_INCLUDE_DIR}"
+    "${spdlog_SOURCE_DIR}/include/"
+    "${nlohmann_json_SOURCE_DIR}/include/" )
+  
 
-IF(WIN32)
-  target_link_libraries(vscpl2drv-socketcan PRIVATE     
-    PThreads4W::PThreads4W_CXXEXC
-    OpenSSL::SSL 
-    OpenSSL::Crypto
-    OpenSSL::SSL OpenSSL::Crypto
-    expat::expat)    
-ELSE()
-  target_link_libraries(vscpl2drv-socketcan PRIVATE     
+
+target_link_libraries(vscpl2drv-socketcan PRIVATE     
     m
     dl
     z
     Threads::Threads
     OpenSSL::SSL 
     OpenSSL::Crypto
-    ${EXPAT_LIBRARIES})
-ENDIF()
+    spdlog
+    nlohmann_json)
+
 
 # Install
-IF(WIN32)
-  # Runtime files
-  install(TARGETS vscpl2drv-socketcan
-          RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  )
-  # Dependencies
-  file(GLOB deps_files "${CMAKE_BINARY_DIR}/Release/*.dll")
-  install(FILES ${deps_files} DESTINATION ${CMAKE_INSTALL_BINDIR})
-  # LICENSE
-  install(FILES "${CMAKE_BINARY_DIR}/../LICENSE" DESTINATION "${CMAKE_INSTALL_BINDIR}/..")
-  # README
-  install(FILES "${CMAKE_BINARY_DIR}/../README.md" DESTINATION "${CMAKE_INSTALL_BINDIR}/..")
-ELSE()
-  install(TARGETS vscpl2drv-socketcan
+
+install(TARGETS vscpl2drv-socketcan
           LIBRARY DESTINATION ${CMAKE_INSTALL_FULL_}${VSCP_LEVEL2_DRV_DIR}
           RUNTIME DESTINATION ${CMAKE_INSTALL_MANDIR}            
           RESOURCE DESTINATION ${CMAKE_INSTALL_FULL_}/var/lib/vscp/vscpd) 
-  install(FILES ${CMAKE_SOURCE_DIR}/resources/linux/socketcan.json
+install(FILES ${CMAKE_SOURCE_DIR}/resources/linux/socketcan.json
           DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/vscpl2drv-socketcan/")      
-ENDIF()
+

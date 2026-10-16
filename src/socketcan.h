@@ -7,8 +7,7 @@
 //
 // This file is part of the VSCP (http://www.vscp.org)
 //
-// Copyright (C) 2000-2020 Ake Hedman,
-// Grodans Paradis AB, <akhe@grodansparadis.com>
+// Copyright (c) 2000-2026 Ake Hedman and contributors, the VSCP Project
 //
 // This file is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -40,15 +39,15 @@
 #include <hlo.h>
 #include <remotevariablecodes.h>
 #include <canal.h>
-#include <canal_macro.h>
+#include <canal-macro.h>
 #include <guid.h>
 #include <vscp.h>
-#include <vscp_class.h>
-#include <vscp_type.h>
+#include <vscp-class.h>
+#include <vscp-type.h>
 #include <vscpdatetime.h>
 #include <vscphelper.h>
 
-#include <json.hpp>  // Needs C++11  -std=c++11
+#include <nlohmann/json.hpp>
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/rotating_file_sink.h"

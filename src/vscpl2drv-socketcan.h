@@ -8,8 +8,7 @@
 //
 // This file is part of the VSCP (http://www.vscp.org)
 //
-// Copyright (C) 2000-2021 Ake Hedman,
-// Ake Hedman, Grodans Paradis AB, <akhe@grodansparadis.com>
+// Copyright (c) 2000-2026 Ake Hedman and contributors, the VSCP Project
 //
 // This file is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -39,9 +38,9 @@
 #include <syslog.h>
 #include <canal.h>
 #include <vscpremotetcpif.h>
-#include <canal_macro.h>
+#include <canal-macro.h>
 
-#include <json.hpp> // Needs C++11  -std=c++11
+#include <nlohmann/json.hpp>
 
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/spdlog.h"

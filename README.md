@@ -428,4 +428,4 @@ To connect to a real CAN bus you need a CAN adapter like [TouCAN](https://www.ru
 ---
 
 ## Copyright
-Copyright (C) 2000-2021 Åke Hedman, The VSCP Project - MIT license.
+Copyright (c) 2000-2026 Ake Hedman and contributors, the VSCP Project - MIT license.

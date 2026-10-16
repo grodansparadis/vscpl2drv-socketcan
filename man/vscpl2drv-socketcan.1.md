@@ -1,5 +1,5 @@
 % vscpl2drv-socketcan(1) VSCP Level II Logger Driver
-% Åke Hedmann, Grodans Paradis AB
+% Ake Hedmann, Grodans Paradis AB
 % September 28, 2019
 
 # NAME
@@ -86,4 +86,4 @@ The [manual](https://grodansparadis.gitbooks.io/the-vscp-daemon) for vscpd conta
 The vscpd source code may be downloaded from <https://github.com/grodansparadis/vscp>. Source code for other system components of VSCP & Friends are here <https://github.com/grodansparadis>
 
 # COPYRIGHT
-Copyright 2000-2019 Åke Hedman, Grodans Paradis AB - MIT license.
+Copyright 2000-2019 Ake Hedman, Grodans Paradis AB - MIT license.

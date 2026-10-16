@@ -8,6 +8,7 @@
 // This file is part of the VSCP (http://www.vscp.org)
 //
 // Copyright (C) 2007 Johan Hedlund,  <kungjohan@gmail.com>
+// Copyright (c) 2000-2026 Ake Hedman and contributors, the VSCP Project
 //
 // This file is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
