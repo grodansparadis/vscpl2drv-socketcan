@@ -70,7 +70,7 @@
 // Buffer for XML parser
 #define XML_BUFF_SIZE 10000
 
-#include <nlohmann/json.hpp> // Needs C++11  -std=c++11
+#include <nlohmann/json.hpp> 
 #include <mustache.hpp>
 
 #include <spdlog/async.h>

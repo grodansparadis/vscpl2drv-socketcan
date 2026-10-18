@@ -1,70 +1,67 @@
 name: Build
 
-on: [push]
-
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:  
+    name: Build for ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-18.04, ubuntu-latest]
+        include:
+          - name: Debian amd64
+            platform: linux/amd64
+            deb_arch: amd64
+          - name: Raspberry Pi 32-bit
+            platform: linux/arm/v7
+            deb_arch: armhf
+          - name: Raspberry Pi 64-bit
+            platform: linux/arm64
+            deb_arch: arm64
 
     steps:
-    # https://github.com/actions/checkout  
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-    - name: Checkout vscp repo
-      uses: actions/checkout@v2
-      with:
-        repository: grodansparadis/vscp
-        path: vscp
-        ref: master
-     
-    - name: Checkout google test repo
-      run: sudo apt-get install libgtest-dev && cd /usr/src/gtest && sudo mkdir build && cd build && sudo cmake .. && sudo make DESTDIR=/usr/lib
+      - name: Enable cross-architecture emulation
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130
+        with:
+          platforms: arm,arm64
 
-    - name: Update before installing packages
-      run: sudo apt-get update
+      - name: Build Debian package
+        env:
+          TARGET_PLATFORM: ${{ matrix.platform }}
+          DEB_ARCH: ${{ matrix.deb_arch }}
+        run: |
+          docker run --rm \
+            --platform "$TARGET_PLATFORM" \
+            --env DEB_ARCH \
+            --volume "$GITHUB_WORKSPACE:/src" \
+            --workdir /src \
+            debian:bookworm \
+            bash -euc '
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get install -y \
+                build-essential \
+                cmake \
+                git \
+                libexpat1-dev \
+                libssl-dev \
+                pandoc \
+                zlib1g-dev
+              cmake -S . -B build \
+                -DCMAKE_INSTALL_PREFIX=/ \
+                -DCPACK_DEBIAN_PACKAGE_ARCHITECTURE="$DEB_ARCH"
+              cmake --build build --parallel "$(nproc)"
+              cd build
+              cpack -G DEB
+            '
 
-    - name: Install libexpat-dev manually
-      run: sudo apt-get install libexpat-dev pandoc
-      
-    - name: Install support libssl
-      run: sudo apt install git libssl-dev libexpat-dev libz-dev
-
-    - name: Install libssl-dev manually
-      run: sudo apt-get install libssl-dev
-
-    - name: Create Build Environment
-      # Some projects don't allow in-source building, so create a separate build directory
-      # We'll use this as our working directory for all subsequent commands
-      run: cmake -E make_directory ${{github.workspace}}/build
-
-    - name: Configure CMake
-      # Use a bash shell so we can use the same syntax for environment variable
-      # access regardless of the host operating system
-      shell: bash
-      working-directory: ${{github.workspace}}/build
-      # Note the current convention is to use the -S and -B options here to specify source 
-      # and build directories, but this is only available with CMake 3.13 and higher.  
-      # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      #run: cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DVSCP_PATH=vscp/
-      run: cmake .. -DCMAKE_INSTALL_PREFIX=/ -DVSCP_PATH=vscp/
-
-    - name: Build
-      working-directory: ${{github.workspace}}/build
-      shell: bash
-      # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: |
-        make -j$(nproc)
-        sudo cpack -G DEB 
-        sudo make install DESTDIR=AppDir
-    - uses: actions/upload-artifact@v2
-      with:
-        name: ${{ matrix.os }}_vscpl2drv-socketcan_15.0.0.deb
-        path: /home/runner/work/vscpl2drv-socketcan/vscpl2drv-socketcan/build/vscpl2drv-socketcan_15.0.0.deb
-        retention-days: 3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vscpl2drv-socketcan-${{ matrix.deb_arch }}
+          path: build/*.deb
+          if-no-files-found: error
+          retention-days: 3
