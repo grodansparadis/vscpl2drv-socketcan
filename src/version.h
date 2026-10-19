@@ -1,6 +1,6 @@
 // version.h
 //
-// Build instructions for VSCP Works.
+// Version information for vscpl2drv-socketcan.
 //
 // Copyright (c) 2000-2026 Ake Hedman and contributors, the VSCP Project
 //
@@ -23,11 +23,15 @@
 // SOFTWARE.
 //
 
-#define MAJOR_VERSION       15
-#define MINOR_VERSION       0
-#define RELEASE_VERSION     0
-#define BUILD_VERSION       0
+// Version is YEAR.MONTH.PATCH
+// PATCH is bumped automatically on every push to master by CI
+// (see tools/bump_version.sh and .github/workflows/build.yml).
+// It is reset to zero when year/month changes.
 
-#define DISPLAY_VERSION "15.0.0.0"
-#define COPYRIGHT       "Copyright (c) 2000-2021 Ake Hedman, the VSCP Project"
-#define COPYRIGHT_HTML  "Copyright (c) 2000-2021 Ake Hedman, the VSCP Project"
+#define MAJOR_VERSION       2026
+#define MINOR_VERSION       10
+#define PATCH_VERSION       0
+
+#define DISPLAY_VERSION "2026.10.0"
+#define COPYRIGHT       "Copyright (c) 2000-2026 Ake Hedman and contributors, the VSCP Project"
+#define COPYRIGHT_HTML  "Copyright (c) 2000-2026 Ake Hedman and contributors, the VSCP Project"

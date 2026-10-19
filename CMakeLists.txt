@@ -30,16 +30,15 @@ cmake_minimum_required(VERSION 3.5)
 project(vscpl2drv-socketcan LANGUAGES CXX C)
 set(PACKAGE_AUTHOR "Ake Hedman, the VSCP Project")
 
-# Version settings
-if(NOT DEFINED MAJOR_VERSION)
-    SET(MAJOR_VERSION "15")
-endif()
-if(NOT DEFINED MINOR_VERSION)
-    SET(MINOR_VERSION "0")
-endif()
-if(NOT DEFINED PATCH_VERSION)
-    SET(PATCH_VERSION "0")
-endif()
+# Version settings (YEAR.MONTH.PATCH) are read from src/version.h
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/version.h")
+foreach(_ver MAJOR_VERSION MINOR_VERSION PATCH_VERSION)
+  if(NOT DEFINED ${_ver})
+    file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/src/version.h" _line REGEX "^#define[ \t]+${_ver}[ \t]+[0-9]+")
+    string(REGEX REPLACE "^#define[ \t]+${_ver}[ \t]+([0-9]+).*" "\\1" ${_ver} "${_line}")
+  endif()
+endforeach()
+message(STATUS "Version: ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}")
 
 # Prevent abi warnings in nlohmann
 SET(GCC_VSCP_COMPILE_FLAGS "-Wno-psabi")
@@ -64,7 +63,7 @@ set(APP_URL "https://github.com/grodansparadis/vscpl2drv-socketcan")
 endif()
 
 if(NOT DEFINED APP_VERSION)
-set(APP_VERSION, "${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}")
+set(APP_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}")
 endif()
 
 # Man build and install

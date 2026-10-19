@@ -5,8 +5,47 @@ on:
   pull_request:
 
 jobs:
+  version:
+    name: Bump patch version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: version-bump-${{ github.ref }}
+      cancel-in-progress: false
+    outputs:
+      sha: ${{ steps.bump.outputs.sha || github.sha }}
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && github.actor != 'github-actions[bot]'
+        with:
+          ref: master
+
+      - name: Bump patch and commit
+        id: bump
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch origin master
+            git reset --hard origin/master
+            version=$(bash tools/bump_version.sh)
+            git commit -am "Bump version to ${version} [skip ci]"
+            if git push origin HEAD:master; then
+              echo "version=${version}" >> "$GITHUB_OUTPUT"
+              echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Failed to push version bump" >&2
+          exit 1
+
   build:
     name: Build for ${{ matrix.name }}
+    needs: version
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -24,6 +63,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
 
       - name: Enable cross-architecture emulation
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130
