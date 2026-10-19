@@ -4,22 +4,16 @@
   "interface": "vcan0",
   "flags": 0,
   "key-file": "/var/vscp/vscp.key",
-  "encryption" : "none|aes128|aes192|aes256",
+  "encryption" : "none",
   "logging": {
     "console-enable": true,
     "console-level": "trace",
-    "console-pattern": "[vcpl2drv-tcpiplink %c] [%^%l%$] %v",
+    "console-pattern": "[vcpl2drv-socketcan %c] [%^%l%$] %v",
     "file-enable": true,
     "file-log-level": "debug",
-    "file-log-path" : "/var/log/vscp/vscpl1drv-tcpiplink.log",
-    "file-log-pattern": "[vcpl2drv-tcpiplink %c] [%^%l%$] %v",
+    "file-log-path" : "/tmp/vscpl2-socketcan.log",
+    "file-log-pattern": "[vcpl2drv-socketcan %c] [%^%l%$] %v",
     "file-log-max-size": 50000,
     "file-log-max-files": 7
-  }, 
-  "filter" : {
-    "in-filter" : "incoming filter on string form",
-    "in-mask" : "incoming mask on string form",
-    "out-filter" : "outgoing filter on string form",
-    "out-mask" : "outgoing mask on string form"
   }
 }
