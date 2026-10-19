@@ -1,10 +1,14 @@
 # vscpl2drv-socketcan
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Linux Build](https://github.com/grodansparadis/vscpl2drv-socketcan/actions/workflows/build.yml/badge.svg) 
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+
 Socketcan level II driver
 
-- **Available for:** Linux
+- **Available for:** Linux (Debian,Raspberry Pi 64-bit (ARM64) and 32-bit (ARMHF))
 - **Driver Linux**: libvscpl2_socketcandrv.so
-- _Socketcan is not available on Windows_
+- _Socketcan is not available on Windows and MacOS_
 
 This driver interface SocketCAN, the official CAN API of the Linux kernel, has been included in the kernel for a long time now. Meanwhile, the official Linux repository has device drivers for all major CAN chipsets used in various architectures and bus types. SocketCAN offers the user a multiuser capable as well as hardware independent socket-based API for CAN based communication and configuration. Socketcan nowadays give access to the major CAN adapters that is available on the market. Note that as CAN only can handle Level I events only events up to class < 1024 can be sent to this device. Other events will be filtered out.
 
