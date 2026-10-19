@@ -116,19 +116,19 @@ CSocketcan::CSocketcan()
   auto console = spdlog::stdout_color_mt("console");
   // Start out with level=info. Config may change this
   console->set_level(spdlog::level::debug);
-  console->set_pattern("[vscpl2drv-websrv] [%^%l%$] %v");
+  console->set_pattern("[vscpl2drv-socketcan] [%^%l%$] %v");
   spdlog::set_default_logger(console);
 
-  console->debug("Starting the vscpl2drv-websrv...");
+  console->debug("Starting the vscpl2drv-socketcan...");
 
   m_bConsoleLogEnable = true;
   m_consoleLogLevel   = spdlog::level::info;
-  m_consoleLogPattern = "[vscpl2drv-tcpiplink %c] [%^%l%$] %v";
+  m_consoleLogPattern = "[vscpl2drv-socketcan %c] [%^%l%$] %v";
 
   m_bEnableFileLog   = true;
   m_fileLogLevel     = spdlog::level::info;
-  m_fileLogPattern   = "[vscpl2drv-tcpiplink %c] [%^%l%$] %v";
-  m_path_to_log_file = "/var/log/vscp/vscpl2drv-tcpiplink.log";
+  m_fileLogPattern   = "[vscpl2drv-socketcan %c] [%^%l%$] %v";
+  m_path_to_log_file = "/var/log/vscp/vscpl2drv-socketcan.log";
   m_max_log_size     = 5242880;
   m_max_log_files    = 7;
 }

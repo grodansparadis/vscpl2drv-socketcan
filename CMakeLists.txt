@@ -212,6 +212,8 @@ add_library(vscpl2drv-socketcan
   ${CMAKE_SOURCE_DIR}/src/socketcan.cpp
   ${vscp_SOURCE_DIR}/src/vscp/common/guid.h
   ${vscp_SOURCE_DIR}/src/vscp/common/guid.cpp
+  ${vscp_SOURCE_DIR}/src/vscp/common/vscphelper.h
+  ${vscp_SOURCE_DIR}/src/vscp/common/vscphelper.cpp
 ) 
 
 

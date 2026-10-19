@@ -3,7 +3,7 @@
   "write" : false,
   "interface": "vcan0",
   "flags": 0,
-  "key-file": "/var/vscp/vscp.key",
+  "key-file": "/etc/vscp/vscp.key",
   "encryption" : "none",
   "logging": {
     "console-enable": true,
