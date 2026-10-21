@@ -55,7 +55,7 @@ set(APP_LOW_NAME "vscpl2drv-socketcan")
 endif()
 
 if(NOT DEFINED APP_NAME)
-set(APP_NAME "VSCPL2DEV-WEBSOCKET")
+set(APP_NAME "VSCPL2DRV-SOCKETCAN")
 endif()
 
 if(NOT DEFINED APP_URL)

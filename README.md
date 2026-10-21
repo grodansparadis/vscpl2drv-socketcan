@@ -8,18 +8,17 @@ Socketcan level II driver
 
 - **Available for:** Linux (Debian,Raspberry Pi 64-bit (ARM64) and 32-bit (ARMHF))
 - **Driver Linux**: libvscpl2_socketcandrv.so
-- _Socketcan is not available on Windows and MacOS_
 
 This driver interface SocketCAN, the official CAN API of the Linux kernel, has been included in the kernel for a long time now. Meanwhile, the official Linux repository has device drivers for all major CAN chipsets used in various architectures and bus types. SocketCAN offers the user a multiuser capable as well as hardware independent socket-based API for CAN based communication and configuration. Socketcan nowadays give access to the major CAN adapters that is available on the market. Note that as CAN only can handle Level I events only events up to class < 1024 can be sent to this device. Other events will be filtered out.
 
-Supports CAN FD.
+The driver supports CAN FD but the way id's are mapped in VSCP over CAN the use of bigger data counts are not just meaningful as they only is available in VSCP level II and the space for vscp class and vscp type is limited.
 
 ## Install the driver
 You can find binary installation files [here](https://github.com/grodansparadis/vscpl2drv-socketcan/releases)
 
 You install the driver using the debian package with
 
-> sudo apt install ./vscpl2drv-socketcan_15.0.0.deb
+> sudo apt install ./vscpl2drv-socketcan_2026.10.2.deb
 
 the driver will be installed to the folder _/var/lib/vscp/drivers/level2/_. 
 
@@ -29,7 +28,7 @@ You also need to set up the configuration file for the driver. If you don't need
 
 If you need to do dynamic configuration (**write** enabled) we recommend that you create the file in the _/var/lib/vscp/_ folder or any location you find to be convenient.
 
-A sample configuration file is available in _/usr/share/vscpl2drv-socketcan_ folder after installation. The sample configuration file is named socketcan.json.
+A sample configuration file is available in _/usr/share/vscpl2drv-socketcan_ folder after installation. The sample configuration file is named socketcan.json. Copy this file to the folder you want it to be in (/etc/vscp) and edit it to suite your needs and the point tot the file from the driver setup in your master software (vscp-mqtt-daemon, vscp-tcpip-daemon or other.)
 
 
 ## How to build the driver
@@ -45,12 +44,6 @@ To build this driver you to clone the driver source
 
 ```bash
 git clone --recurse-submodules -j8 https://github.com/grodansparadis/vscpl2drv-socketcan.git
-```
-
-You also need to have the vscp main repository checkout at the same location as you checkout the driver. Do this with
-
-```bash
-git clone --recurse-submodules -j8 https://github.com/grodansparadis/vscp.git
 ```
 
 The build used **pandoc** for man-page generation so you want the man pages you should install it first with
@@ -72,6 +65,8 @@ make
 sudo make install
 ```
 
+You can add _-DCMAKE-DEBUG-TYPE=debug__ to the cmake line above if you want to build a version with ebug information.
+
 Skip _"-DCMAKE_INSTALL_PREFIX=/"_ if you want the _"local"_ prefix to all install paths except for the driver.
 
 If you want to generate binary packages issue
@@ -90,9 +85,9 @@ to install to */usr/local/var/lib/vscp/drivers/level2*.
 
 ## Configuration
 
-#### VSCP daemon driver config
+#### VSCP MQTT daemon (vscp-mqtt-daemon) driver config
 
-The VSCP daemon configuration file is (normally) located at */etc/vscp/vscpd.json* (For the curious: [VSCP daemon full sample config file for Linux](https://github.com/grodansparadis/vscp/blob/master/resources/linux/vscpd.json)). To use the vscpl2drv-socketcan.so driver there must be an entry in the drivers level2 section
+The VSCP MQTT daemon configuration file is (normally) located at */etc/vscp/vscpd.json* (For the curious: [VSCP daemon full sample config file for Linux](https://github.com/grodansparadis/vscp/blob/master/resources/linux/vscpd.json)). To use the vscpl2drv-socketcan.so driver there must be an entry in the drivers level2 section
 
 ```json
 "drivers" : {
@@ -105,7 +100,7 @@ with the following format
 {
   "enable" : true,
   "name" : "socketcan",
-  "path-driver" : "/var/lib/vscp/drivers/level2/libvscpl2drv-socketcan.so",
+  "path-driver" : "/path/do/driver/libvscpl2drv-socketcan.so",
   "path-config" : "/etc/vscp/socketcan.json",
   "guid" : "FF:FF:FF:FF:FF:FF:FF:F5:33:33:00:00:00:00:00:00",
 
@@ -197,6 +192,33 @@ All level II drivers must have a unique GUID. There is many ways to obtain this 
 ##### mqtt
 See the [VSCP configuration documentation](https://grodansparadis.github.io/vscp/#/configuring_the_vscp_daemon?id=config-mqtt) for info about this section. It is common for all drivers.
 
+#### VSCP tcp/ip daemon (vscp-tcpip-daemon) driver config
+
+```json
+{
+  {
+    "enable": true,
+    "name": "socketcan",
+    "path-driver": "/path/to/driver/libvscpl2drv-socketcan.so",
+    "path-config": "/etc/vscp/socketcan.json",
+    "guid": "FF:FF:FF:FF:FF:FF:FF:F5:02:00:00:00:00:00:00:03"
+  }
+}
+
+##### enable
+Set enable to "true" if the driver should be loaded by the VSCP daemon.
+
+##### name
+This is the name of the driver. Used when referring to it in different interfaces.
+
+##### path-driver
+This is the path to the driver. If you install from a Debian package this will be */var/lib/vscp/drivers/level2/libvscpl2drv-socketcan.so*.
+
+##### path-config
+This is the path to the driver configuration file (see below). This file determines the functionality of the driver. A good place for this file is in _/etc/vscp/socketcan.json_ It should be readable only by the user the VSCP daemon is run under (normally _vscp_) as it holds credentials to log in to a remote VSCP tcp/ip link interface. Never make it writable at this location.
+
+##### guid
+All level II drivers must have a unique GUID. There is many ways to obtain this GUID, Read more [here](https://grodansparadis.gitbooks.io/the-vscp-specification/vscp_globally_unique_identifiers.html). The tool [vscp_eth_to_guid](https://grodansparadis.github.io/vscp/#/configuring_the_vscp_daemon?id=think-before-guid) is a useful tool that is shipped with the VSCP daemon that will get you a unique GUID if you are working on a machine with an Ethernet interface.
 
 ## Configuring the driver
 
@@ -245,7 +267,7 @@ All level II drivers must have a unique GUID. There is many ways to obtain this 
 
 ### Interface
 
-> interface  (For example can0/can1/can2...)
+> interface  (For example can0/can1/can2... vacan0, vcan1, vcan2...)
 
 The parameter interface is the socketcan interface to use. Typically this is can0, can0, can1... Defaults is vcan0 the first virtual interface. If the variable prefix_interface is available it will be used instead of the configuration value.
 
