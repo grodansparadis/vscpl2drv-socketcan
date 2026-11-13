@@ -29,9 +29,9 @@
 // It is reset to zero when year/month changes.
 
 #define MAJOR_VERSION       2026
-#define MINOR_VERSION       10
-#define PATCH_VERSION       4
+#define MINOR_VERSION       11
+#define PATCH_VERSION       0
 
-#define DISPLAY_VERSION "2026.10.4"
+#define DISPLAY_VERSION "2026.11.0"
 #define COPYRIGHT       "Copyright (c) 2000-2026 Ake Hedman and contributors, the VSCP Project"
 #define COPYRIGHT_HTML  "Copyright (c) 2000-2026 Ake Hedman and contributors, the VSCP Project"
