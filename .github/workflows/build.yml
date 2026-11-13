@@ -100,9 +100,20 @@ jobs:
               cpack -G DEB
             '
 
+      - name: Write SHA256SUMS
+        id: sha256sums_103
+        continue-on-error: true
+        shell: bash
+        run: |
+          bash .github/scripts/write-sha256sums.sh "SHA256SUMS-vscpl2drv-socketcan-${{ matrix.deb_arch }}" <<'SHA256SUMS_PATTERNS'
+          build/*.deb
+          SHA256SUMS_PATTERNS
+
       - uses: actions/upload-artifact@v4
         with:
           name: vscpl2drv-socketcan-${{ matrix.deb_arch }}
-          path: build/*.deb
+          path: |
+            build/*.deb
+            ${{ steps.sha256sums_103.outputs.file }}
           if-no-files-found: error
           retention-days: 3
