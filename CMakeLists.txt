@@ -148,6 +148,9 @@ find_package(Threads REQUIRED)
 #openssl
 find_package(OpenSSL REQUIRED)
 
+# expat
+find_package(EXPAT REQUIRED)
+
 
 include(FetchContent)
 
@@ -214,7 +217,18 @@ add_library(vscpl2drv-socketcan
   ${vscp_SOURCE_DIR}/src/vscp/common/guid.cpp
   ${vscp_SOURCE_DIR}/src/vscp/common/vscphelper.h
   ${vscp_SOURCE_DIR}/src/vscp/common/vscphelper.cpp
-) 
+  ${vscp_SOURCE_DIR}/src/common/crc.c
+  ${vscp_SOURCE_DIR}/src/common/crc8.c
+  ${vscp_SOURCE_DIR}/src/common/vscp-aes.c
+  ${vscp_SOURCE_DIR}/src/common/vscpbase64.c
+  ${vscp_SOURCE_DIR}/src/common/vscpmd5.c
+  ${vscp_SOURCE_DIR}/src/common/vscphelper-common.cpp
+)
+
+# Fail at link time instead of at dlopen time if a symbol is missing
+if(UNIX AND NOT APPLE)
+  target_link_options(vscpl2drv-socketcan PRIVATE "-Wl,--no-undefined")
+endif()
 
 
 include_directories( PUBLIC src/
@@ -236,6 +250,7 @@ target_link_libraries(vscpl2drv-socketcan PRIVATE
     Threads::Threads
     OpenSSL::SSL 
     OpenSSL::Crypto
+    EXPAT::EXPAT
     spdlog
     nlohmann_json)
 

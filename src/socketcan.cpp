@@ -722,8 +722,31 @@ CSocketcan::doLoadConfig(void)
 bool
 CSocketcan::addEvent2SendQueue(const vscpEvent *pEvent)
 {
+  if (NULL == pEvent) {
+    return false;
+  }
+
+  // Silently drop if writing to the bus is not enabled
+  if (!m_bWriteEnable) {
+    return true;
+  }
+
+  if (!vscp_doLevel2Filter(pEvent, &m_filterOut)) {
+    return true;
+  }
+
+  // The caller owns pEvent and may free it as soon as we return,
+  // so queue a private copy.
+  vscpEvent *pCopy = new vscpEvent;
+  pCopy->pdata     = NULL;
+  pCopy->sizeData  = 0;
+  if (!vscp_copyEvent(pCopy, pEvent)) {
+    vscp_deleteEvent(pCopy);
+    return false;
+  }
+
   pthread_mutex_lock(&m_mutexSendQueue);
-  m_sendList.push_back((vscpEvent *) pEvent);
+  m_sendList.push_back(pCopy);
   sem_post(&m_semSendQueue);
   pthread_mutex_unlock(&m_mutexSendQueue);
   return true;
@@ -819,7 +842,7 @@ workerThread(void *pData)
 
         // There is data to read
 
-        ret = read(sock, &frame, sizeof(struct can_frame));
+        ret = read(sock, &frame, sizeof(struct canfd_frame));
         if (ret < 0) {
           if (ENETDOWN == errno) {
             // We try to get contact with the net
@@ -833,8 +856,12 @@ workerThread(void *pData)
           continue;
         }
 
-        // Must be Extended
-        if (!(frame.can_id & CAN_EFF_FLAG)) {
+        if ((CAN_MTU != ret) && (CANFD_MTU != ret)) {
+          continue;
+        }
+
+        // Must be Extended and not a remote or error frame
+        if (!(frame.can_id & CAN_EFF_FLAG) || (frame.can_id & (CAN_RTR_FLAG | CAN_ERR_FLAG))) {
           continue;
         }
 
@@ -846,10 +873,9 @@ workerThread(void *pData)
 
           // This can lead to level I frames having to
           // much data. Later code will handel this case.
-          pEvent->pdata = new uint8_t[frame.len];
-          if (NULL == pEvent->pdata) {
-            delete pEvent;
-            continue;
+          pEvent->pdata = NULL;
+          if (frame.len) {
+            pEvent->pdata = new uint8_t[frame.len];
           }
 
           // GUID will be set to GUID of interface
@@ -883,18 +909,21 @@ workerThread(void *pData)
       else {
 
         // Check if there is event(s) to send
+        vscpEvent *pEvent = NULL;
+        pthread_mutex_lock(&pObj->m_mutexSendQueue);
         if (pObj->m_sendList.size()) {
+          pEvent = pObj->m_sendList.front();
+          pObj->m_sendList.pop_front();
+        }
+        pthread_mutex_unlock(&pObj->m_mutexSendQueue);
+
+        if (NULL != pEvent) {
 
           // Yes there are data to send
           // So send it out on the CAN bus
 
-          pthread_mutex_lock(&pObj->m_mutexSendQueue);
-          vscpEvent *pEvent = pObj->m_sendList.front();
-          pObj->m_sendList.pop_front();
-          pthread_mutex_unlock(&pObj->m_mutexSendQueue);
-
-          if (NULL == pEvent)
-            continue;
+          bool bSend = true;
+          memset(&frame, 0, sizeof(frame));
 
           // Class must be a Level I class or a Level II
           // mirror class
@@ -906,23 +935,28 @@ workerThread(void *pData)
               memcpy(frame.data, pEvent->pdata, frame.len);
             }
           }
-          else if (pEvent->vscp_class < 1024) {
+          else if ((pEvent->vscp_class < 1024) && (pEvent->sizeData >= 16)) {
+            // Level I over Level II: first 16 data bytes are the destination GUID
             pEvent->vscp_class -= 512;
             frame.can_id = vscp_getCANALidFromEvent(pEvent);
             frame.can_id |= CAN_EFF_FLAG; // Always extended
-            if (0 != pEvent->sizeData) {
-              frame.len = ((pEvent->sizeData - 16) > 8 ? 8 : pEvent->sizeData - 16);
+            frame.len = ((pEvent->sizeData - 16) > 8 ? 8 : pEvent->sizeData - 16);
+            if (frame.len) {
               memcpy(frame.data, pEvent->pdata + 16, frame.len);
             }
           }
+          else {
+            // Level II event, can't be sent on a Level I CAN bus
+            bSend = false;
+          }
 
           // Remove the event
-          pthread_mutex_lock(&pObj->m_mutexSendQueue);
           vscp_deleteEvent(pEvent);
-          pthread_mutex_unlock(&pObj->m_mutexSendQueue);
 
           // Write the data
-          int nbytes = write(sock, &frame, sizeof(struct can_frame));
+          if (bSend && (CAN_MTU != write(sock, &frame, CAN_MTU))) {
+            spdlog::warn("Failed to write CAN frame to {}.", pObj->m_interface);
+          }
 
         } // event to send
 
