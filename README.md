@@ -204,6 +204,7 @@ See the [VSCP configuration documentation](https://grodansparadis.github.io/vscp
     "guid": "FF:FF:FF:FF:FF:FF:FF:F5:02:00:00:00:00:00:00:03"
   }
 }
+```
 
 ##### enable
 Set enable to "true" if the driver should be loaded by the VSCP daemon.
