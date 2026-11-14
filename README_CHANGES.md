@@ -7,6 +7,9 @@ tagged, rename **Unreleased** to the version and date, and start a new
 
 ## Unreleased
 
+- Fix the driver failing to load: link the VSCP helper sources and expat, and fail the build on unresolved symbols
+- Fix a crash and garbage frames: queue a copy of events passed to VSCPWrite instead of the caller's pointer
+- Honour the `write` option and the out-filter; read full CAN FD frames and ignore RTR/error frames
 - Fix the CI checksum step: readable SHA256SUMS files, bash 3.2 on macOS, and jobs that run in a subfolder
 - Add scripts/download-artifacts.sh to download and verify the newest CI build artifacts
 - CI writes a SHA256SUMS-<artifact> checksum file into every uploaded build artifact
