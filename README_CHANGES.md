@@ -7,6 +7,7 @@ tagged, rename **Unreleased** to the version and date, and start a new
 
 ## Unreleased
 
+- Build against the latest vscp master (d75d4f5c6)
 - Man page vscpl2drv-socketcan(1) describes the driver and its configuration file. It is converted from man/vscpl2drv-socketcan.1.md with pandoc when the driver is built and installed in share/man/man1; old man page scripts and generated files are removed
 - Fix the driver failing to load: link the VSCP helper sources and expat, and fail the build on unresolved symbols
 - Fix a crash and garbage frames: queue a copy of events passed to VSCPWrite instead of the caller's pointer

@@ -170,8 +170,8 @@ FetchContent_Declare(
   # never uses.
   # Get URL_HASH
   # curl -sL https://codeload.github.com/grodansparadis/vscp/tar.gz/<commit> | sha256sum
-  URL https://codeload.github.com/grodansparadis/vscp/tar.gz/911239f8fc7a5f084fe3435c6c7f2ee31e9f4c90
-  URL_HASH SHA256=a5e1c8154f22139082f857901343580dd510b8fc58c7cfb9d23d6e269cca24fa
+  URL https://codeload.github.com/grodansparadis/vscp/tar.gz/d75d4f5c6c097a1dca841b63727c79c522b701ce
+  URL_HASH SHA256=709763c16c995b65787e72947f9c3f45a03a404c708286c7cad00b53dcaedbb5
   ${VSCP_FETCH_CONTENT_OPTIONS}
 )
 # Make the VSCP sources available without adding its standalone library targets
